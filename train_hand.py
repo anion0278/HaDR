@@ -10,7 +10,7 @@ import os
 if __name__ == '__main__':
 
     cfg = Config.fromfile('./configs/solov2/solov2_light_448_r50_fpn_custom.py') #works, batch size 32
-    cfg.load_from = './checkpoints/epoch_2.pth' #SOLOv2_LIGHT_448_R50_3x
+    cfg.load_from = './checkpoints/SOLOv2_LIGHT_448_R50_3x.pth' #SOLOv2_LIGHT_448_R50_3x
 
     # cfg = Config.fromfile('./configs/solov2/solov2_light_512_dcn_r50_fpn_custom.py')
     # cfg.load_from = './checkpoints/SOLOv2_LIGHT_512_DCN_R50_3x.pth'
@@ -19,12 +19,16 @@ if __name__ == '__main__':
     # cfg.load_from = './checkpoints/SOLOv2_Light_448_R50_3x.pth'
 
     cfg.dataset_type = 'CocoDataset'
-    PREFIX = os.path.abspath('../datasets/rgbd_joined_dataset/ruka_2')
+    PREFIX = os.path.abspath('G:/datasety/new')
+    cfg.data.train.ann_file = PREFIX + '/instances_hands_30600.json'
+
+    # PREFIX = os.path.abspath('../datasets/rgbd_joined_dataset/ruka_2')
+    # cfg.data.train.ann_file = PREFIX + '/instances_hands_train2022.json'
+
     cfg.data.train.img_prefix = PREFIX + "/color/"
-    cfg.data.train.ann_file = PREFIX + '/instances_hands_train2022.json'
     cfg.data.train.type = 'CocoDataset'
 
-    cfg.optimizer.lr = 0.0000000001
+    cfg.optimizer.lr = 0.001
     cfg.lr_config.warmup = None
 
     # Set seed thus the results are more reproducible
