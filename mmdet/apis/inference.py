@@ -1,10 +1,10 @@
 import warnings
 
-import matplotlib.pyplot as plt
 import mmcv
 import numpy as np
 import pycocotools.mask as maskUtils
 import torch
+import matplotlib.pyplot as plt
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 
@@ -151,7 +151,7 @@ def show_result(img,
         bbox_result, segm_result = result, None
     bboxes = np.vstack(bbox_result)
     labels = [
-        np.full(bbox.shape[0], i, dtype=np.int32)
+        np.full(np.array(bbox).shape[0], i, dtype=np.int32)
         for i, bbox in enumerate(bbox_result)
     ]
     labels = np.concatenate(labels)

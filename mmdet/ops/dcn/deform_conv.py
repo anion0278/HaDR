@@ -67,8 +67,9 @@ class DeformConvFunction(Function):
             raise NotImplementedError
         else:
             cur_im2col_step = min(ctx.im2col_step, input.shape[0])
-            assert (input.shape[0] %
-                    cur_im2col_step) == 0, 'im2col step must divide batchsize'
+            # cur_im2col_step = 64
+            # raise NotImplementedError("im col %s - input %s" % (ctx.im2col_step, input.shape[0]))
+            assert (input.shape[0] % cur_im2col_step) == 0, 'im2col step must divide batchsize'
 
             if ctx.needs_input_grad[0] or ctx.needs_input_grad[1]:
                 grad_input = torch.zeros_like(input)

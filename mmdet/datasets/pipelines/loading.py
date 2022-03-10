@@ -3,9 +3,54 @@ import os.path as osp
 import mmcv
 import numpy as np
 import pycocotools.mask as maskUtils
+import cv2
 
 from ..registry import PIPELINES
 
+@PIPELINES.register_module
+class LoadRgbdImageFromFile(object):
+
+    def __init__(self, to_float32=False, color_type='color'):
+        self.to_float32 = to_float32
+        self.color_type = color_type
+
+    def __call__(self, results):
+        if results['img_prefix'] is not None:
+            filename = osp.join(results['img_prefix'],
+                                results['img_info']['filename'])
+        else:
+            filename = results['img_info']['filename']
+        img_rgb = mmcv.imread(filename, self.color_type)
+        img_d = mmcv.imread(filename.replace("color","depth"), "grayscale")
+        img_d = img_d[..., np.newaxis]
+        img_full = np.concatenate([img_rgb, img_d], axis=2)
+
+        if self.to_float32:
+            img_full = img_full.astype(np.float32)
+        results['filename'] = filename
+        results['img'] = img_full
+        results['img_shape'] = img_full.shape
+        results['ori_shape'] = img_full.shape
+        return results
+
+    def __repr__(self):
+        return '{} (to_float32={}, color_type={})'.format(
+            self.__class__.__name__, self.to_float32, self.color_type)
+
+@PIPELINES.register_module
+class ConvertRgbdToBgrd(object):
+
+    def __init__(self):
+        pass
+
+    def __call__(self, results):
+        img = results['img']
+        cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA, img)  # inplace
+        results['img'] = img
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + 'to BGR-D'
 
 @PIPELINES.register_module
 class LoadImageFromFile(object):

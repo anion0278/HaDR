@@ -402,6 +402,7 @@ class SOLOv2Head(nn.Module):
         # process.
         inds = (cate_preds > cfg.score_thr)
         cate_scores = cate_preds[inds]
+        #print("cate_scores len: %s" % len(cate_scores))
         if len(cate_scores) == 0:
             return None
 

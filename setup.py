@@ -1,3 +1,8 @@
+import torch
+x = torch.cuda.is_available()
+
+
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
