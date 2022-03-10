@@ -62,16 +62,14 @@ data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53, 128.0], std=[58.395, 57.12, 57.375, 57.0], to_rgb=False) # !!!
 train_pipeline = [
-    # dict(type='LoadImageFromFile'),
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-        #  img_scale=[(768, 512), (768, 480), (768, 448),
-        #            (768, 416), (768, 384), (768, 352)],
          img_scale=[(320, 256)],
          multiscale_mode='value',
          keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
+    dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
     dict(type='Pad', size_divisor=32),
@@ -79,15 +77,16 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadRgbdImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[(320, 256)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
+            # dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
+            dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),

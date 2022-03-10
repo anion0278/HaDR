@@ -48,6 +48,25 @@ def init_detector(config, checkpoint=None, device='cuda:0'):
     return model
 
 
+
+class LoadRgbdImage(object):
+
+    def __call__(self, results):
+        if isinstance(results['img'], str):
+            results['filename'] = results['img']
+        else:
+            results['filename'] = None
+        filename = results['img']
+        img = mmcv.imread(filename)
+        img_rgb = mmcv.imread(filename, "color")
+        img_d = mmcv.imread(filename.replace("color","depth"), "grayscale")
+        img_d = img_d[..., np.newaxis]
+        img_full = np.concatenate([img_rgb, img_d], axis=2)
+        results['img'] = img_full
+        results['img_shape'] = img_full.shape
+        results['ori_shape'] = img_full.shape
+        return results
+
 class LoadImage(object):
 
     def __call__(self, results):
@@ -77,7 +96,7 @@ def inference_detector(model, img):
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
     # build the data pipeline
-    test_pipeline = [LoadImage()] + cfg.data.test.pipeline[1:]
+    test_pipeline = [LoadRgbdImage()] + cfg.data.test.pipeline[1:]
     test_pipeline = Compose(test_pipeline)
     # prepare data
     data = dict(img=img)
