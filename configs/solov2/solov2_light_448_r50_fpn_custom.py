@@ -72,7 +72,7 @@ train_pipeline = [
     dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
-    dict(type='Pad', size_divisor=32),
+    # dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
@@ -87,7 +87,7 @@ test_pipeline = [
             # dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
-            dict(type='Pad', size_divisor=32),
+            dict(type='Pad'), # Pad is required ! since our Real-cam images have shape 240x320 
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
         ])
