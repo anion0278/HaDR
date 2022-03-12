@@ -3,6 +3,7 @@ import inspect
 import mmcv
 import numpy as np
 from numpy import random
+import random as rn
 
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
 from ..registry import PIPELINES
@@ -696,6 +697,38 @@ class MinIoURandomCrop(object):
             self.min_ious, self.min_crop_size)
         return repr_str
 
+
+@PIPELINES.register_module
+class CorruptRgbd(object):
+
+    def __init__(self, corruption, flip_ratio = 0.5, max_severity=1):
+        self.corruption = corruption
+        self.severity = max_severity
+        self.flip_ratio = flip_ratio
+
+    def __call__(self, results):
+        if corrupt is None:
+            raise RuntimeError('imagecorruptions is not installed')
+        actual_severity = rn.randint(1, self.severity)
+        if np.random.rand() < self.flip_ratio: # !!!
+            corrupted_rgb = corrupt(
+                results['img'][:,:,0:3].astype(np.uint8),
+                corruption_name=self.corruption,
+                severity=actual_severity)
+            # img_d = results['img'][:,:,-1]
+            img_d = corrupt(
+                results['img'][:,:,-1].astype(np.uint8),
+                corruption_name=self.corruption,
+                severity=actual_severity)[:,:,1]
+            img_d = img_d[..., np.newaxis]
+            results['img'] = np.concatenate([corrupted_rgb, img_d], axis=2)
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += '(corruption={}, severity={})'.format(
+            self.corruption, self.severity)
+        return repr_str
 
 @PIPELINES.register_module
 class Corrupt(object):
