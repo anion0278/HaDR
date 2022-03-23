@@ -3,15 +3,15 @@ resolution = (256, 448) # SEQUENCE !!
 # model settings
 model = dict(
     type='SOLOv2',
-    pretrained='torchvision://resnet50',
+    pretrained='torchvision://resnet101',
     backbone=dict(
         type='ResNet',
-        depth=50,
-        in_channels = 4, # !!!
+        depth=101,
+        in_channels = 4,
         num_stages=4,
         out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
-        frozen_stages=0, # !!!!!!!!!!!!!!!!!!!!!!!!
-        style='pytorch'),
+        frozen_stages=0, # !!!!!!!!!!!!!!!!!!!!!!!
+        style='pytorch'), 
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -20,15 +20,15 @@ model = dict(
         num_outs=5),
     bbox_head=dict(
         type='SOLOv2Head',
-        num_classes=2, # changed !!!
+        num_classes=2,
         in_channels=256,
-        stacked_convs=2,
-        seg_feat_channels=256,
+        stacked_convs=4,
+        seg_feat_channels=512,
         strides=[8, 8, 16, 32, 32],
-        scale_ranges=((1, 56), (28, 112), (56, 224), (112, 448), (224, 896)),
+        scale_ranges=((1, 96), (48, 192), (96, 384), (192, 768), (384, 2048)),
         sigma=0.2,
         num_grids=[40, 36, 24, 16, 12],
-        ins_out_channels=128,
+        ins_out_channels=256,
         loss_ins=dict(
             type='DiceLoss',
             use_sigmoid=True,
@@ -45,7 +45,7 @@ model = dict(
             out_channels=128,
             start_level=0,
             end_level=3,
-            num_classes=128,
+            num_classes=256,
             norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)),
     )
 # training and testing settings
@@ -106,7 +106,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=16,
+    imgs_per_gpu=8,
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
@@ -124,22 +124,21 @@ data = dict(
         img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
 # optimizer
-# optimizer = dict(type='Adam', lr=0.002, weight_decay=0.001) 
-optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
+optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(policy='poly', power=0.9, min_lr=1e-8, by_epoch=False) # if by_epoch = False, then changes according to iteration
 
+# optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+# optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+# # learning policy
 # lr_config = dict(
 #     policy='step',
 #     warmup='linear',
-#     warmup_iters=50,
+#     warmup_iters=500,
 #     warmup_ratio=0.01,
 #     step=[27, 33])
-
-
 checkpoint_config = dict(interval=1)
-
 # yapf:disable
 log_config = dict(
     interval=50,
@@ -153,7 +152,7 @@ total_epochs = 36
 device_ids = range(8)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/solov2_light_release_r50_fpn_8gpu_3x'
+work_dir = './work_dirs/solov2_release_r101_fpn_8gpu_3x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

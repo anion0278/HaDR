@@ -57,9 +57,9 @@ class LoadRgbdImage(object):
         else:
             results['filename'] = None
         filename = results['img']
-        img = mmcv.imread(filename)
         img_rgb = mmcv.imread(filename, "color")
-        img_d = mmcv.imread(filename.replace("color","depth"), "grayscale")
+        depth_img_path = filename.replace("color","depth")
+        img_d = mmcv.imread(depth_img_path, "grayscale")
         img_d = img_d[..., np.newaxis]
         img_full = np.concatenate([img_rgb, img_d], axis=2)
         results['img'] = img_full

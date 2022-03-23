@@ -699,29 +699,66 @@ class MinIoURandomCrop(object):
 
 
 @PIPELINES.register_module
-class CorruptRgbd(object):
+class DecimateDepth(object):
+    def __init__(self, probability = 0.5): 
+        self.probability = probability
 
-    def __init__(self, corruption, flip_ratio = 0.5, max_severity=1):
+    def __call__(self, results):
+        if np.random.rand() < self.probability: # !!!
+
+            img_rgb = results['img'][:,:,0:3]
+            
+            img_d = results['img'][:,:,-1]
+            img_d = img_d[..., np.newaxis]
+            img_d = np.floor_divide(img_d, 10)
+            img_d = (img_d * 10.0).astype("uint8")          
+
+            results['img'] = np.concatenate([img_rgb, img_d], axis=2)
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += '(decimation!)'.format(
+            self.corruption, self.severity)
+        return repr_str
+
+@PIPELINES.register_module
+class CorruptRgbd(object):
+    '''
+    :channels ["all","color","depth","random"] - which channels will be changed
+    '''
+    def __init__(self, corruption, probability = 0.5, channels="all", max_severity=1): 
         self.corruption = corruption
         self.severity = max_severity
-        self.flip_ratio = flip_ratio
+        self.probability = probability
+        self.channels = channels
 
     def __call__(self, results):
         if corrupt is None:
             raise RuntimeError('imagecorruptions is not installed')
-        actual_severity = rn.randint(1, self.severity)
-        if np.random.rand() < self.flip_ratio: # !!!
-            corrupted_rgb = corrupt(
-                results['img'][:,:,0:3].astype(np.uint8),
-                corruption_name=self.corruption,
-                severity=actual_severity)
-            # img_d = results['img'][:,:,-1]
-            img_d = corrupt(
-                results['img'][:,:,-1].astype(np.uint8),
-                corruption_name=self.corruption,
-                severity=actual_severity)[:,:,1]
+        if np.random.rand() < self.probability: # !!!
+            actual_severity = rn.randint(1, self.severity)
+            
+            # also made changes in brightness and contrast corruptions (see imagecorruption package)
+
+            if self.channels == "random": self.channels = random.choise(["all","color","depth"])
+
+            if self.channels in ["all", "color"]: # IT IS NOT POSSIBLE TO Process all channels with the same preset !! the processing of RGB and D is random each time
+                img_rgb = corrupt(
+                    results['img'][:,:,0:3].astype(np.uint8),
+                    corruption_name=self.corruption,
+                    severity=actual_severity)
+            else: img_rgb = results['img'][:,:,0:3]
+
+            if self.channels in ["all", "depth"]:
+                img_d = corrupt(
+                    results['img'][:,:,-1].astype(np.uint8),
+                    corruption_name=self.corruption,
+                    severity=actual_severity)[:,:,1]
+            else: img_d = results['img'][:,:,-1]
             img_d = img_d[..., np.newaxis]
-            results['img'] = np.concatenate([corrupted_rgb, img_d], axis=2)
+
+            results['img'] = np.concatenate([img_rgb, img_d], axis=2)
         return results
 
     def __repr__(self):

@@ -3,24 +3,35 @@ from mmcv import Config
 from mmdet.apis import set_random_seed
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
-from mmdet.apis import train_detector, init_detector, inference_detector
+from mmdet.apis import train_detector
 import os
 
 
 if __name__ == '__main__':
 
-    cfg = Config.fromfile('./configs/solov2/solov2_light_448_r50_fpn_custom.py') #works, batch size 32
-    cfg.load_from = './checkpoints/SOLOv2_LIGHT_448_R50_3x.pth' #SOLOv2_LIGHT_448_R50_3x
+    cfg = Config.fromfile('./configs/solov2/solov2_r101_fpn_custom.py') #works, batch size 32
+    cfg.load_from = './checkpoints/epoch_2.pth' #SOLOv2_LIGHT_448_R50_3x 
 
-    # cfg = Config.fromfile('./configs/solov2/solov2_light_512_dcn_r50_fpn_custom.py')
-    # cfg.load_from = './checkpoints/SOLOv2_LIGHT_512_DCN_R50_3x.pth'
+    # cfg = Config.fromfile('./configs/mask_rcnn_r101_fpn_custom.py') 
+    # cfg.load_from = './checkpoints/epoch_1.pth'  
+
+    # cfg = Config.fromfile('./configs/solov2/solov2_light_448_r50_fpn_custom.py') #works, batch size 32
+    # cfg.load_from = './checkpoints/s2ch4_epoch_9.pth' #SOLOv2_LIGHT_448_R50_3x 
+    # is is possible to dynamically download Pretrained model - the string should start with "modelzoo://"
 
     # cfg = Config.fromfile('./configs/solov2/solov2_light_448_r50_fpn_8gpu_3x.py') #works, batch size 12
     # cfg.load_from = './checkpoints/SOLOv2_Light_448_R50_3x.pth'
 
+    # cfg = Config.fromfile('./configs/solov2/solov2_light_512_dcn_r50_fpn_custom.py') # does not work with 4 channels
+    # cfg.load_from = './checkpoints/SOLOv2_LIGHT_512_DCN_R50_3x.pth'
+
     cfg.dataset_type = 'CocoDataset'
-    PREFIX = os.path.abspath('G:/datasety/new')
-    cfg.data.train.ann_file = PREFIX + '/instances_hands_30600.json'
+    # PREFIX = os.path.abspath('H:\image_cam')
+    # cfg.data.train.ann_file = PREFIX + '/instances_hands_train2022.json'  # 3800 30600 101200
+    PREFIX = os.path.abspath('H:/dataset_9k_448_256_noblur')
+    cfg.data.train.ann_file = PREFIX + '/instances_hands_6000.json'  # 3800 30600 101200
+    # PREFIX = os.path.abspath('G:/datasety/new')
+    # cfg.data.train.ann_file = PREFIX + '/instances_hands_3800.json'  # 3800 30600 101200
 
     # PREFIX = os.path.abspath('../datasets/rgbd_joined_dataset/ruka_2')
     # cfg.data.train.ann_file = PREFIX + '/instances_hands_train2022.json'
@@ -28,32 +39,30 @@ if __name__ == '__main__':
     cfg.data.train.img_prefix = PREFIX + "/color/"
     cfg.data.train.type = 'CocoDataset'
 
-    cfg.optimizer.lr = 0.001
-    cfg.lr_config.warmup = None
+    cfg.optimizer.lr = 0.00003
+    # cfg.lr_config.warmup = None
 
     # Set seed thus the results are more reproducible
-    cfg.seed = 0
-    set_random_seed(0, deterministic=False)
+    cfg.seed = 22
+    set_random_seed(22, deterministic=False)
     cfg.gpu_ids = range(1)
     cfg.device_ids = range(1)
     cfg.gpus = 1
 
     cfg.work_dir = "./checkpoints"
-    cfg.total_epochs = 4
-    cfg.checkpoint_config = dict(create_symlink=False, interval = 1)
-    cfg.data.imgs_per_gpu = 32
-    cfg.data.workers_per_gpu = 4
+    cfg.total_epochs = 6
+    cfg.checkpoint_config = dict(create_symlink=False, interval = 2)
 
     cfg.log_config = dict(
         interval=1,
         hooks=[
             dict(type='TextLoggerHook'),
-            dict(type='TensorboardLoggerHook')
+            # dict(type='TensorboardLoggerHook')
         ])
 
-    model = build_detector(cfg.model)
+    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     datasets = [build_dataset(cfg.data.train)]
-    datasets[0].CLASSES = ["hand", "dummy"]
+    datasets[0].CLASSES = ["hand"]
     model.CLASSES = datasets[0].CLASSES
 
     # CHECK OUT frozen_stages=0 for fine-tunning !!

@@ -71,7 +71,7 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    dict(type='Resize', img_scale=[(320, 256)], multiscale_mode='value', keep_ratio=True),
+    dict(type='Resize', img_scale=[(448, 256)], multiscale_mode='value', keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
     dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
     dict(type='Normalize', **img_norm_cfg),
@@ -84,7 +84,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(320, 256),
+        img_scale=(448, 256),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
