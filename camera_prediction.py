@@ -1,26 +1,28 @@
-from mmdet.apis import init_detector, inference_detector, show_result_pyplot
-config_file = '../SOLO/configs/solov2/solov2_r101_fpn_custom.py'
-#config_file = '../SOLO/configs/solov2/solov2_light_448_r50_fpn_custom.py'
-checkpoint_file = '../SOLO/checkpoints/epoch_6.pth'
-#checkpoint_file = '../SOLO/checkpoints/s2ch4_epoch_10.pth'
-# build the model from a config file and a checkpoint file
-model = init_detector(config_file, checkpoint_file, device='cuda:0')
-print("test")
-
-
-
-from mmdet.apis import inference_detector, show_result_ins, predict_image
+from mmdet.apis import init_detector, show_result_ins, predict_image
+import time
 import pyrealsense2 as rs
 import numpy as np
-import os
 import cv2
+
+
+config_file = '../SOLO/configs/solov2/solov2_r101_fpn_custom.py'
+checkpoint_file = '../SOLO/checkpoints/epoch_6.pth'
+
+# config_file = '../SOLO/configs/solov2/solov2_light_448_r50_fpn_custom.py'
+# checkpoint_file = '../SOLO/checkpoints/s2ch4_epoch_10.pth'
+
+model = init_detector(config_file, checkpoint_file, device='cuda:0')
 
 model.CLASSES = ["hand"]
 
 def detect(img_rbgd):
+    start = time.time()
     result = predict_image(model, img_rbgd)
+    title = "Inference time: %.2f s" % (time.time() - start)
     img_res = show_result_ins(img_rbgd[:,:,0:3], result, model.CLASSES, score_thr=0.5)
-    cv2.imshow("inference", img_res)
+    window_id = "win id"
+    cv2.imshow(window_id, img_res)
+    cv2.setWindowTitle(window_id, title)
     cv2.waitKey(1)
     
 
@@ -40,12 +42,11 @@ depth_sensor.set_option(rs.option.visual_preset,5)
 
 align_to = rs.stream.color
 align = rs.align(align_to)
-i=0
+
 while(True):
     frames = pipeline.wait_for_frames() # original frames
     aligned_frames = align.process(frames) # aligned frames
     depth_frame = aligned_frames.get_depth_frame()
-    #depth_frame = frames.get_depth_frame()
     color_frame = aligned_frames.get_color_frame()
 
     depth_image = np.asanyarray(depth_frame.get_data())
@@ -59,15 +60,6 @@ while(True):
     mapped_depth = 255-norm(mapped_depth)*255
     mapped_depth = mapped_depth[..., np.newaxis]
     rgbd = np.concatenate([color_image,mapped_depth.astype("uint8")],axis=2)
-    # img_path = os.path.abspath(r"C:/camera_image")
-    #cv2.imwrite(os.path.join(img_path,"color",str(i)+".png"), color_image.astype("uint8"))
-    #cv2.imwrite(os.path.join(img_path,"depth",str(i)+".png"), color_image.astype("uint8"))
     detect(rgbd)
-    i = i+1
+    
 pipeline.stop()
-
-#for f in ["425", "399", "292", "315", "497", "458", "302", "282", "372", ]:
-# for f in ["12_131", "7_240", "8_196", "9_152", "12_131"]:
-    #import os
-    #img = os.path.abspath('../../datasets/real_cam/2_ruce_rukavice_250/color') + "/" + f+".png"
-    #detect(img)

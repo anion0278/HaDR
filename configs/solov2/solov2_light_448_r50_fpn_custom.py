@@ -1,4 +1,4 @@
-resolution = (256, 448) # SEQUENCE !!
+resolution = (256, 448) # CORRECT sequnce, checked in loading.py !!
 
 # model settings
 model = dict(
@@ -67,7 +67,7 @@ train_pipeline = [
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-         img_scale=[(198, 320), (288, 480)],
+         img_scale=[(198, 320), (288, 480)], # CORRECT sequnce, checked in loading.py H, W !!
          multiscale_mode='range',
          keep_ratio=False),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
