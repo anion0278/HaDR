@@ -52,6 +52,7 @@ class ProcessRgbdImage(object):
 
     def __call__(self, results):
         img_full = results['img_rgbd']
+        results['filename'] = "in-memory"
         results['img'] = img_full
         results['img_shape'] = img_full.shape
         results['ori_shape'] = img_full.shape
@@ -270,7 +271,9 @@ def show_result_ins(img,
     """
 
     assert isinstance(class_names, (tuple, list))
-    img = mmcv.imread(img)
+    if isinstance(img, str):
+        img = mmcv.imread(img)
+
     img_show = img.copy()
     h, w, _ = img.shape
 
@@ -320,7 +323,7 @@ def show_result_ins(img,
         cur_cate = cate_label[idx]
         cur_score = cate_score[idx]
         label_text = class_names[cur_cate]
-        #label_text += '|{:.02f}'.format(cur_score)
+        label_text += '|{:.02f}'.format(cur_score)
         center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)
         vis_pos = (max(int(center_x) - 10, 0), int(center_y))
         cv2.putText(img_show, label_text, vis_pos,
