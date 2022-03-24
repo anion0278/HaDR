@@ -48,6 +48,14 @@ def init_detector(config, checkpoint=None, device='cuda:0'):
     return model
 
 
+class ProcessRgbdImage(object):
+
+    def __call__(self, results):
+        img_full = results['img_rgbd']
+        results['img'] = img_full
+        results['img_shape'] = img_full.shape
+        results['ori_shape'] = img_full.shape
+        return results
 
 class LoadRgbdImage(object):
 
@@ -80,6 +88,20 @@ class LoadImage(object):
         results['ori_shape'] = img.shape
         return results
 
+def predict_image(model, img_rgbd):
+    cfg = model.cfg
+    device = next(model.parameters()).device  # model device
+    # build the data pipeline
+    test_pipeline = [ProcessRgbdImage()] + cfg.data.test.pipeline[1:]
+    test_pipeline = Compose(test_pipeline)
+    # prepare data
+    data = dict(img_rgbd=img_rgbd)
+    data = test_pipeline(data)
+    data = scatter(collate([data], samples_per_gpu=1), [device])[0]
+    # forward the model
+    with torch.no_grad():
+        result = model(return_loss=False, rescale=True, **data)
+    return result
 
 def inference_detector(model, img):
     """Inference image(s) with the detector.
