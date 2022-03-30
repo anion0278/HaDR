@@ -6,7 +6,7 @@ import cv2
 
 
 config_file = '../SOLO/configs/solov2/solov2_r101_fpn_custom.py'
-checkpoint_file = '../SOLO/checkpoints/epoch_6.pth'
+checkpoint_file = '../SOLO/checkpoints/epoch_2.pth'
 
 # config_file = '../SOLO/configs/solov2/solov2_light_448_r50_fpn_custom.py'
 # checkpoint_file = '../SOLO/checkpoints/s2ch4_epoch_10.pth'
@@ -19,9 +19,12 @@ def detect(img_rbgd):
     start = time.time()
     result = predict_image(model, img_rbgd)
     title = "Inference time: %.2f s" % (time.time() - start)
+    depth = img_rbgd[:,:,3:4]
+    depth = np.stack((np.squeeze(depth),)*3, axis=-1)
+    imgd_res = show_result_ins(depth, result, model.CLASSES, score_thr=0.5)
     img_res = show_result_ins(img_rbgd[:,:,0:3], result, model.CLASSES, score_thr=0.5)
     window_id = "win id"
-    cv2.imshow(window_id, img_res)
+    cv2.imshow(window_id, np.hstack([img_res, imgd_res]))
     cv2.setWindowTitle(window_id, title)
     cv2.waitKey(1)
     
@@ -38,7 +41,7 @@ pipeline_config.enable_stream(rs.stream.color, img_camera_size[0], img_camera_si
 profile = pipeline.start(pipeline_config)
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale()
-depth_sensor.set_option(rs.option.visual_preset,5)
+# depth_sensor.set_option(rs.option.visual_preset,5)
 
 align_to = rs.stream.color
 align = rs.align(align_to)
