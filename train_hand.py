@@ -14,18 +14,20 @@ if __name__ == '__main__':
 
     arch_name = "solov2_r101_fpn"
 
+    storage = "E"
+
     cfg = Config.fromfile('./paper/tested_configs/' + arch_name + '_custom.py')
-    cfg.work_dir = "G:/models/"
+    cfg.work_dir = storage + ":/models/"
     cfg.load_from = cfg.work_dir + arch_name + '.pth'
     # cfg.load_from = './checkpoints/r101_e6.pth' 
 
-    PREFIX = os.path.abspath('G:/datasets/dataset9x_matte+2hands')
+    PREFIX = os.path.abspath(storage + ':/datasets/dataset9x_matte+2hands')
     cfg.data.train.ann_file = PREFIX + '/instances_hands_full.json' 
 
     cfg.data.train.img_prefix = PREFIX + "/color/"
     cfg.data.train.type = 'CocoDataset'
 
-    VAL_PREFIX = "G:/datasets/sim_validation_dataset"
+    VAL_PREFIX =  storage + ":/datasets/sim_validation_dataset"
     cfg.data.val.ann_file = VAL_PREFIX + '/instances_hands_full.json'  
     cfg.data.val.img_prefix = VAL_PREFIX + "/color/"
     cfg.data.val.pipeline = cfg.val_pipeline
