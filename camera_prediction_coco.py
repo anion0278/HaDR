@@ -1,5 +1,6 @@
 from mmdet.apis import init_detector, show_result_ins, predict_image
 import time
+
 import numpy as np
 import cv2
 import sys, os
@@ -7,16 +8,21 @@ path = os.path.abspath("..\HGR_CNN")
 sys.path.insert(0,path)
 import pyrealsense2 as rs
 
-config_file = '../SOLO/paper/tested_configs/solov2_r101_fpn_custom.py'
-checkpoint_file = '../SOLO/checkpoints/epoch_1.pth'
+config_file = '../SOLO/configs/solov2/solov2_r101_fpn_8gpu_3x.py'
+checkpoint_file = '../SOLO/checkpoints/SOLOv2_R101_3x.pth'
+
+# config_file = '../SOLO/configs/solov2/solov2_light_448_r50_fpn_custom.py'
+# checkpoint_file = '../SOLO/checkpoints/s2ch4_epoch_10.pth'
 
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
 
+# model.CLASSES = ["hand"]
+
 def detect(img_rbgd):
     start = time.time()
-    result = predict_image(model, img_rbgd)
-    elapsed_time = time.time() - start
-    title = "Inference time: %.2f s, FPS: %.1f" % (elapsed_time, 1/elapsed_time)
+    img_rgb = img_rbgd[:,:,0:3]
+    result = predict_image(model, img_rgb)
+    title = "Inference time: %.2f s" % (time.time() - start)
     depth = img_rbgd[:,:,3:4]
     depth = np.stack((np.squeeze(depth),)*3, axis=-1)
     imgd_res = show_result_ins(depth, result, model.CLASSES, score_thr=0.5)
@@ -29,8 +35,6 @@ def detect(img_rbgd):
 
 img_camera_size = (640,480)
 camera_rate = 30
-
-# TODO put into separate class
 
 pipeline = rs.pipeline()
 pipeline_config = rs.config()

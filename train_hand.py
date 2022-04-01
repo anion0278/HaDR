@@ -4,71 +4,81 @@ from mmdet.apis import set_random_seed
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.apis import train_detector
+from mmcv.runner import save_checkpoint
 import os
 
+import warnings
+warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 if __name__ == '__main__':
 
-    cfg = Config.fromfile('./configs/solov2/solov2_r101_fpn_custom.py') #works, batch size 32
-    cfg.load_from = './checkpoints/epoch_2.pth' #SOLOv2_LIGHT_448_R50_3x 
+    arch_name = "solov2_r101_fpn"
 
-    # cfg = Config.fromfile('./configs/mask_rcnn_r101_fpn_custom.py') 
-    # cfg.load_from = './checkpoints/epoch_1.pth'  
+    cfg = Config.fromfile('./paper/tested_configs/' + arch_name + '_custom.py')
+    cfg.work_dir = "./checkpoints/"
+    cfg.load_from = cfg.work_dir + arch_name + '.pth'
+    # cfg.load_from = './checkpoints/r101_e6.pth' 
 
-    # cfg = Config.fromfile('./configs/solov2/solov2_light_448_r50_fpn_custom.py') #works, batch size 32
-    # cfg.load_from = './checkpoints/s2ch4_epoch_9.pth' #SOLOv2_LIGHT_448_R50_3x 
-    # is is possible to dynamically download Pretrained model - the string should start with "modelzoo://"
-
-    # cfg = Config.fromfile('./configs/solov2/solov2_light_448_r50_fpn_8gpu_3x.py') #works, batch size 12
-    # cfg.load_from = './checkpoints/SOLOv2_Light_448_R50_3x.pth'
-
-    # cfg = Config.fromfile('./configs/solov2/solov2_light_512_dcn_r50_fpn_custom.py') # does not work with 4 channels
-    # cfg.load_from = './checkpoints/SOLOv2_LIGHT_512_DCN_R50_3x.pth'
-
-    cfg.dataset_type = 'CocoDataset'
-    # PREFIX = os.path.abspath('H:\image_cam')
-    # cfg.data.train.ann_file = PREFIX + '/instances_hands_train2022.json'  # 3800 30600 101200
-    PREFIX = os.path.abspath('H:/dataset_9k_448_256_noblur')
-    cfg.data.train.ann_file = PREFIX + '/instances_hands_6000.json'  # 3800 30600 101200
-    # PREFIX = os.path.abspath('G:/datasety/new')
-    # cfg.data.train.ann_file = PREFIX + '/instances_hands_3800.json'  # 3800 30600 101200
-
-    # PREFIX = os.path.abspath('../datasets/rgbd_joined_dataset/ruka_2')
-    # cfg.data.train.ann_file = PREFIX + '/instances_hands_train2022.json'
+    PREFIX = os.path.abspath(r'G:/datasets/dataset9x_matte+2hands')
+    cfg.data.train.ann_file = PREFIX + '/instances_hands_full.json' 
 
     cfg.data.train.img_prefix = PREFIX + "/color/"
     cfg.data.train.type = 'CocoDataset'
 
-    cfg.optimizer.lr = 0.00003
-    # cfg.lr_config.warmup = None
+    VAL_PREFIX = r"G:/datasets\sim_validation_dataset"
+    cfg.data.val.ann_file = VAL_PREFIX + '/instances_hands_full.json'  
+    cfg.data.val.img_prefix = VAL_PREFIX + "/color/"
+    cfg.data.val.pipeline = cfg.val_pipeline
+    cfg.data.val.type = 'CocoDataset'
 
-    # Set seed thus the results are more reproducible
+    datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
+    datasets[0].CLASSES = ["hand"]
+    datasets[1].CLASSES = datasets[0].CLASSES
+
     cfg.seed = 22
     set_random_seed(22, deterministic=False)
-    cfg.gpu_ids = range(1)
-    cfg.device_ids = range(1)
-    cfg.gpus = 1
+    cfg.workflow = [('train', 1), ('val', 1)]
 
-    cfg.work_dir = "./checkpoints"
-    cfg.total_epochs = 6
-    cfg.checkpoint_config = dict(create_symlink=False, interval = 2)
+    cfg.data.imgs_per_gpu = 8
+    cfg.lr_config.warmup_iters = 250 # should be ~ equal to single epoch
+    cfg.checkpoint_config = dict(create_symlink=False, interval = 5) # TRY TO USE state of optimizer save_optimizer = True
+    cfg.log_config.interval = 1
 
-    cfg.log_config = dict(
-        interval=1,
-        hooks=[
-            dict(type='TextLoggerHook'),
-            # dict(type='TensorboardLoggerHook')
-        ])
+    cfg.optimizer.lr = 1e-4
+    cfg.model.backbone.frozen_stages = 4
+    cfg.total_epochs = 10
+
+
+# FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
-    datasets = [build_dataset(cfg.data.train)]
-    datasets[0].CLASSES = ["hand"]
-    model.CLASSES = datasets[0].CLASSES
+    model.CLASSES = datasets[0].CLASSES # needed for the first time
+    train_detector(model, datasets, cfg, distributed=False, validate=False)
+    latest_checkpoint = cfg.work_dir + "lastest_" + arch_name +  ".pth"
+    save_checkpoint(model, latest_checkpoint)
+    print("Pre-training finished")
 
-    # CHECK OUT frozen_stages=0 for fine-tunning !!
-    # try resnext backbone
+# PARTIALLY FROZEN
 
-    train_detector(model, datasets[0], cfg, distributed=False, validate=False)
-    print("Training finished")
+    cfg.load_from = latest_checkpoint
+    cfg.optimizer.lr = 1e-5
+    cfg.lr_config.policy = "step" # this is needed because dict.pop() method is used in mmcv\runner\runner.py", line 366, in register_lr_hook
+    cfg.model.backbone.frozen_stages = 1
+    cfg.total_epochs = 10
+    cfg.model.pop("pretrained")
+    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+    train_detector(model, datasets, cfg, distributed=False, validate=False)
+    save_checkpoint(model, latest_checkpoint)
+    print("Intermediate training finished")
 
-# 2022-03-10 13:03:54,250 - mmdet - INFO - Epoch [2][38/1279]     lr: 0.00001, eta: 0:17:22, time: 0.769, data_time: 0.295, memory: 2937, loss_ins: 0.4544, loss_cate: 0.3656, loss: 0.8200
+# NON-FROZEN
+
+    cfg.load_from = latest_checkpoint
+    cfg.optimizer.lr = 1e-6
+    cfg.lr_config.policy = "step"
+    cfg.model.backbone.frozen_stages = 0
+    cfg.total_epochs = 15
+    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+    train_detector(model, datasets, cfg, distributed=False, validate=False)
+    save_checkpoint(model, cfg.work_dir + "final_" + arch_name + ".pth")
+    print("Final (full network) training finished!")

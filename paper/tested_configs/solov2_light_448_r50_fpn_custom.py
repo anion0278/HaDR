@@ -1,3 +1,5 @@
+resolution = (256, 448) # CORRECT sequnce, checked in loading.py !!
+
 # model settings
 model = dict(
     type='SOLOv2',
@@ -5,16 +7,11 @@ model = dict(
     backbone=dict(
         type='ResNet',
         depth=50,
+        in_channels = 4, # !!!
         num_stages=4,
-        in_channels = 4,
         out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
-        frozen_stages=1,
-        style='pytorch',
-        dcn=dict(
-            type='DCN',
-            deformable_groups=1,
-            fallback_on_stride=False),
-        stage_with_dcn=(False, True, True, True)),
+        frozen_stages=0, # !!!!!!!!!!!!!!!!!!!!!!!!
+        style='pytorch'),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -22,15 +19,13 @@ model = dict(
         start_level=0,
         num_outs=5),
     bbox_head=dict(
-        type='SOLOv2LightHead',
-        num_classes=2,
+        type='SOLOv2Head',
+        num_classes=2, # changed !!!
         in_channels=256,
-        stacked_convs=3,
-        use_dcn_in_tower=True,
-        type_dcn='DCN',
+        stacked_convs=2,
         seg_feat_channels=256,
         strides=[8, 8, 16, 32, 32],
-        scale_ranges=((1, 64), (32, 128), (64, 256), (128, 512), (256, 2048)),
+        scale_ranges=((1, 56), (28, 112), (56, 224), (112, 448), (224, 896)),
         sigma=0.2,
         num_grids=[40, 36, 24, 16, 12],
         ins_out_channels=128,
@@ -67,13 +62,27 @@ test_cfg = dict(
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53, 128.0], std=[58.395, 57.12, 57.375, 57.0], to_rgb=False, is_rgbd=True) # Should be in RGBA sequence
+    mean=[123.675, 116.28, 103.53, 128.0], std=[58.395, 57.12, 57.375, 57.0], to_rgb=False) # !!!
 train_pipeline = [
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    dict(type='Resize', img_scale=[(448, 256)], multiscale_mode='value', keep_ratio=True),
+    dict(type='Resize',
+         img_scale=[(198, 320), (288, 480)], # CORRECT sequnce, checked in loading.py H, W !!
+         multiscale_mode='range',
+         keep_ratio=False),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
     dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
+    dict(type='DecimateDepth', probability=0.5),
+    dict(type='CorruptRgbd', corruption="motion_blur", max_severity=4),
+    dict(type='CorruptRgbd', corruption="elastic_transform", max_severity=2),
+    dict(type='CorruptRgbd', corruption="brightness", max_severity=4),
+    dict(type='CorruptRgbd', corruption="contrast", max_severity=3),
+    dict(type='CorruptRgbd', corruption="saturate", max_severity=3),
+    dict(type='CorruptRgbd', corruption="fog", max_severity=4),
+    dict(type='CorruptRgbd', corruption="defocus_blur", max_severity=2),
+    # dict(type='CorruptRgbd', corruption="glass_blur", max_severity=2),
+    # dict(type='CorruptRgbd', corruption="pixelate", max_severity=4),
+    # dict(type='CorruptRgbd', corruption="zoom_blur", max_severity=1),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
     dict(type='Pad', size_divisor=32),
@@ -81,23 +90,24 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadRgbdImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(448, 256),
+        img_scale=[resolution],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
+            # dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=32),
+            dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
+            dict(type='Pad', size_divisor=32), # Pad is required ! since our Real-cam images have shape 240x320 
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
         ])
 ]
 data = dict(
-    imgs_per_gpu=2,
-    workers_per_gpu=2,
+    imgs_per_gpu=16,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_train2017.json',
@@ -114,19 +124,23 @@ data = dict(
         img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+# optimizer = dict(type='Adam', lr=0.002, weight_decay=0.001) 
+optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=0.01,
-    step=[27, 33])
-checkpoint_config = dict(interval=1)
+lr_config = dict(policy='poly', power=0.9, min_lr=1e-8, by_epoch=False) # if by_epoch = False, then changes according to iteration
+
+# lr_config = dict(
+#     policy='step',
+#     warmup='linear',
+#     warmup_iters=50,
+#     warmup_ratio=0.01,
+#     step=[27, 33])
+
+
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -135,9 +149,11 @@ log_config = dict(
 # runtime settings
 total_epochs = 36
 device_ids = range(1)
+gpu_ids = range(1)
+gpus = 1
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/solov2_light_512_dcn_release_r50_fpn_1gpu_1x'
+work_dir = './work_dirs/solov2_light_release_r50_fpn_8gpu_3x'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

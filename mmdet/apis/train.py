@@ -92,6 +92,11 @@ def train_detector(model,
                    timestamp=None):
     logger = get_root_logger(cfg.log_level)
 
+    try:
+        print("Frozen stages: %s" % cfg.model.backbone.frozen_stages)
+    except:
+        print("No frozen_stages param was found")
+
     # start training
     if distributed:
         _dist_train(
