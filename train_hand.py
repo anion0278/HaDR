@@ -1,10 +1,16 @@
 # SOLOv2 train  
+import os, sys
+path = os.path.abspath(".\modified_packges")
+sys.path.insert(0,path)
+import mmcv
 from mmcv import Config
+from mmcv.runner import save_checkpoint
+print(os.path.abspath(mmcv.__file__))
+
 from mmdet.apis import set_random_seed
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.apis import train_detector
-from mmcv.runner import save_checkpoint
 import os
 
 import warnings
@@ -12,9 +18,8 @@ warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 if __name__ == '__main__':
 
+    storage = "D"
     arch_name = "solov2_r101_fpn"
-
-    storage = "E"
 
     cfg = Config.fromfile('./paper/tested_configs/' + arch_name + '_custom.py')
     cfg.work_dir = storage + ":/models/"
@@ -48,11 +53,12 @@ if __name__ == '__main__':
 
     cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = 4
-    cfg.total_epochs = 10
+    cfg.total_epochs = 5
 
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
+    cfg.model.pop("pretrained") # get rid of pretrained backbone since we will init wieghts from checkpoint
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     model.CLASSES = datasets[0].CLASSES # needed for the first time
     train_detector(model, datasets, cfg, distributed=False, validate=False)
@@ -66,8 +72,7 @@ if __name__ == '__main__':
     cfg.optimizer.lr = 1e-5
     cfg.lr_config.policy = "step" # this is needed because dict.pop() method is used in mmcv\runner\runner.py", line 366, in register_lr_hook
     cfg.model.backbone.frozen_stages = 1
-    cfg.total_epochs = 10
-    cfg.model.pop("pretrained")
+    cfg.total_epochs = 5
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     train_detector(model, datasets, cfg, distributed=False, validate=False)
     save_checkpoint(model, latest_checkpoint)
@@ -79,7 +84,7 @@ if __name__ == '__main__':
     cfg.optimizer.lr = 1e-6
     cfg.lr_config.policy = "step"
     cfg.model.backbone.frozen_stages = 0
-    cfg.total_epochs = 15
+    cfg.total_epochs = 8
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     train_detector(model, datasets, cfg, distributed=False, validate=False)
     save_checkpoint(model, cfg.work_dir + "final_" + arch_name + ".pth")

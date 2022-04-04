@@ -119,3 +119,12 @@ work_dirs/
 
 # Pytorch
 *.pth
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
+.vs/SOLO/FileContentIndex/2d8feb1d-0492-40c1-9172-14d59adf9dfa.vsidx
+.vs/SOLO/FileContentIndex/read.lock
+.vs/SOLO/v16/.suo
+.vs/SOLO/v16/Browse.VC.db
+.vs/SOLO/v17/.suo
+.vs/SOLO/v17/Preview/Browse.VC.db
+.vs/VSWorkspaceState.json
