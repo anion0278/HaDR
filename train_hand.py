@@ -1,11 +1,12 @@
 # SOLOv2 train  
 import os, sys
-path = os.path.abspath(".\modified_packges")
+path = os.path.abspath("./modified_packges")
 sys.path.insert(0,path)
-import mmcv
+import mmcv, imagecorruptions
 from mmcv import Config
 from mmcv.runner import save_checkpoint
 print(os.path.abspath(mmcv.__file__))
+#print(os.path.abspath(imagecorruptions.__file__))
 
 from mmdet.apis import set_random_seed
 from mmdet.datasets import build_dataset
@@ -18,12 +19,12 @@ warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 if __name__ == '__main__':
 
-    storage = "D"
+    storage = "E"
     arch_name = "solov2_r101_fpn"
 
     cfg = Config.fromfile('./paper/tested_configs/' + arch_name + '_custom.py')
     cfg.work_dir = storage + ":/models/"
-    cfg.load_from = cfg.work_dir + arch_name + '.pth'
+    #cfg.load_from = cfg.work_dir + arch_name + '.pth'
     # cfg.load_from = './checkpoints/r101_e6.pth' 
 
     PREFIX = os.path.abspath(storage + ':/datasets/dataset9x_matte+2hands')
@@ -51,9 +52,9 @@ if __name__ == '__main__':
     cfg.checkpoint_config = dict(create_symlink=False, interval = 5) # TRY TO USE state of optimizer save_optimizer = True
     cfg.log_config.interval = 1
 
-    cfg.optimizer.lr = 1e-4
-    cfg.model.backbone.frozen_stages = 4
-    cfg.total_epochs = 5
+    cfg.optimizer.lr = 1e-3
+    cfg.model.backbone.frozen_stages = 0
+    cfg.total_epochs = 36
 
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
@@ -68,24 +69,24 @@ if __name__ == '__main__':
 
 # PARTIALLY FROZEN
 
-    cfg.load_from = latest_checkpoint
-    cfg.optimizer.lr = 1e-5
-    cfg.lr_config.policy = "step" # this is needed because dict.pop() method is used in mmcv\runner\runner.py", line 366, in register_lr_hook
-    cfg.model.backbone.frozen_stages = 1
-    cfg.total_epochs = 5
-    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
-    train_detector(model, datasets, cfg, distributed=False, validate=False)
-    save_checkpoint(model, latest_checkpoint)
-    print("Intermediate training finished")
+#     cfg.load_from = latest_checkpoint
+#     cfg.optimizer.lr = 1e-5
+#     cfg.lr_config.policy = "step" # this is needed because dict.pop() method is used in mmcv\runner\runner.py", line 366, in register_lr_hook
+#     cfg.model.backbone.frozen_stages = 1
+#     cfg.total_epochs = 5
+#     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+#     train_detector(model, datasets, cfg, distributed=False, validate=False)
+#     save_checkpoint(model, latest_checkpoint)
+#     print("Intermediate training finished")
 
-# NON-FROZEN
+# # NON-FROZEN
 
-    cfg.load_from = latest_checkpoint
-    cfg.optimizer.lr = 1e-6
-    cfg.lr_config.policy = "step"
-    cfg.model.backbone.frozen_stages = 0
-    cfg.total_epochs = 8
-    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
-    train_detector(model, datasets, cfg, distributed=False, validate=False)
-    save_checkpoint(model, cfg.work_dir + "final_" + arch_name + ".pth")
-    print("Final (full network) training finished!")
+#     cfg.load_from = latest_checkpoint
+#     cfg.optimizer.lr = 1e-6
+#     cfg.lr_config.policy = "step"
+#     cfg.model.backbone.frozen_stages = 0
+#     cfg.total_epochs = 8
+#     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+#     train_detector(model, datasets, cfg, distributed=False, validate=False)
+#     save_checkpoint(model, cfg.work_dir + "final_" + arch_name + ".pth")
+#     print("Final (full network) training finished!")
