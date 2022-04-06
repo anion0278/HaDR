@@ -1,3 +1,7 @@
+import os, sys
+path = os.path.abspath("./modified_packges")
+sys.path.insert(0,path)
+
 from mmdet.apis import init_detector, show_result_ins, predict_image
 import time
 import numpy as np
@@ -8,9 +12,10 @@ sys.path.insert(0,path)
 import pyrealsense2 as rs
 
 config_file = '../SOLO/paper/tested_configs/solov2_r101_fpn_custom.py'
-checkpoint_file = '../SOLO/checkpoints/epoch_1.pth'
+checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
 
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
+model.CLASSES = ["hand"]
 
 def detect(img_rbgd):
     start = time.time()
@@ -31,7 +36,6 @@ img_camera_size = (640,480)
 camera_rate = 30
 
 # TODO put into separate class
-
 
 pipeline = rs.pipeline()
 pipeline_config = rs.config()
@@ -67,9 +71,9 @@ while(True):
     depth_frame = aligned_frames.get_depth_frame()
     color_frame = aligned_frames.get_color_frame()
 
+    depth_image = np.asanyarray(depth_frame.get_data())
+    color_image = np.asanyarray(color_frame.get_data())
     if(device_type == "L500"):
-        depth_image = np.asanyarray(depth_frame.get_data())
-        color_image = np.asanyarray(color_frame.get_data())
         rawdepth = np.asanyarray(depth_frame.get_data())
         min = 0.2
         max = 1.05

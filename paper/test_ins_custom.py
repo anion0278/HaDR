@@ -3,7 +3,9 @@ import os
 import os.path as osp
 import shutil
 import tempfile
-
+import sys, os
+path = os.path.abspath("./modified_packges")
+sys.path.insert(0,path)
 import mmcv
 import torch
 import torch.nn.functional as F
@@ -188,11 +190,12 @@ def main():
 
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
-    PREFIX = os.path.abspath(r'C:\dataset\dataset_9x_matte')
-    cfg.data.test.ann_file = PREFIX + '/instances_hands_train2022.json'
+    PREFIX = os.path.abspath(r'G:\datasets\sim_validation_dataset')
+    cfg.data.test.ann_file = PREFIX + '/instances_hands_full.json'
     cfg.data.test.img_prefix = PREFIX + "/color/"
 
     dataset = build_dataset(cfg.data.test)
+    dataset.CLASSES = ["hand"] # !!!!!!!!!!!!!!!!!!!!
 
     data_loader = build_dataloader(
         dataset,

@@ -1,3 +1,7 @@
+import os, sys
+path = os.path.abspath("./modified_packges")
+sys.path.insert(0,path)
+
 from mmdet.apis import init_detector, show_result_ins, predict_image
 import time
 
@@ -9,7 +13,7 @@ sys.path.insert(0,path)
 import pyrealsense2 as rs
 
 config_file = '../SOLO/configs/solov2/solov2_r101_fpn_8gpu_3x.py'
-checkpoint_file = '../SOLO/checkpoints/SOLOv2_R101_3x.pth'
+checkpoint_file = '../SOLO/checkpoints/solov2_r101_fpn.pth'
 
 # config_file = '../SOLO/configs/solov2/solov2_light_448_r50_fpn_custom.py'
 # checkpoint_file = '../SOLO/checkpoints/s2ch4_epoch_10.pth'
