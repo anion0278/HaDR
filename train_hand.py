@@ -16,9 +16,10 @@ import os
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
+
 if __name__ == '__main__':
 
-    storage = "D"
+    storage = "G"
     arch_name = "solov2_r101_fpn"
 
     cfg = Config.fromfile('./paper/tested_configs/' + arch_name + '_custom.py')
@@ -48,16 +49,17 @@ if __name__ == '__main__':
 
     cfg.data.imgs_per_gpu = 8
     cfg.lr_config.warmup_iters = 250 # should be ~ equal to single epoch
-    cfg.checkpoint_config = dict(create_symlink=False, interval = 5) # TRY TO USE state of optimizer save_optimizer = True
+    cfg.checkpoint_config = dict(create_symlink=False, interval = 4) # TRY TO USE state of optimizer save_optimizer = True
     cfg.log_config.interval = 1
 
     cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = 4
-    cfg.total_epochs = 5
+    cfg.total_epochs = 4
 
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
+    print("this line is needed to make line-cleaning command working")
     cfg.model.pop("pretrained") # get rid of pretrained backbone since we will init wieghts from checkpoint
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     model.CLASSES = datasets[0].CLASSES # needed for the first time

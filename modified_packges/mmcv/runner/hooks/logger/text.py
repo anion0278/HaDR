@@ -90,13 +90,13 @@ class TextLoggerHook(LoggerHook):
     def log(self, runner):
         log_dict = OrderedDict()
         # training mode if the output contains the key "time"
-        mode = 'train' if 'time' in runner.log_buffer.output else 'val'
-        log_dict['mode'] = mode
+        # mode = 'train' if 'time' in runner.log_buffer.output else 'val'
+        log_dict['mode'] = runner.mode
         log_dict['epoch'] = runner.epoch + 1
         log_dict['iter'] = runner.inner_iter + 1
         # only record lr of the first param group
         log_dict['lr'] = runner.current_lr()[0]
-        if mode == 'train':
+        if runner.mode == 'train':
             log_dict['time'] = runner.log_buffer.output['time']
             log_dict['data_time'] = runner.log_buffer.output['data_time']
             # statistic memory
@@ -107,5 +107,7 @@ class TextLoggerHook(LoggerHook):
                 continue
             log_dict[name] = val
 
+        # length should depend on the previous message
+        print ("\033[A                                                                                                                                                                      \033[A")
         self._log_info(log_dict, runner)
         self._dump_log(log_dict, runner)
