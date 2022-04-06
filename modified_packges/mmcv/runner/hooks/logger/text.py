@@ -21,7 +21,7 @@ class TextLoggerHook(LoggerHook):
     def before_run(self, runner):
         super(TextLoggerHook, self).before_run(runner)
         self.start_iter = runner.iter
-        self.json_log_path = osp.join(runner.work_dir, 'Training.log.json')
+        self.json_log_path = osp.join(runner.work_dir, 'Training_log_{}.json'.format(runner.timestamp))
         if runner.meta is not None:
             self._dump_log(runner.meta, runner)
 
