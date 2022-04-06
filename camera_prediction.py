@@ -32,6 +32,7 @@ camera_rate = 30
 
 # TODO put into separate class
 
+
 pipeline = rs.pipeline()
 pipeline_config = rs.config()
 
@@ -39,21 +40,23 @@ pipeline_config.enable_stream(rs.stream.depth, img_camera_size[0], img_camera_si
 pipeline_config.enable_stream(rs.stream.color, img_camera_size[0], img_camera_size[1], rs.format.bgr8, camera_rate)
 
 profile = pipeline.start(pipeline_config)
+device = profile.get_device()
+device_type = str(device.get_info(rs.camera_info.product_line))
+
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale()
 
-#D515
-# depth_sensor.set_option(rs.option.visual_preset,5)
-
-#D435
-filter_HF = rs.hole_filling_filter()
-filter_HF.set_option(rs.option.holes_fill, 3)
-colorizer = rs.colorizer()
-colorizer.set_option(rs.option.visual_preset,1)
-colorizer.set_option(rs.option.min_distance,0.2)        
-colorizer.set_option(rs.option.max_distance,1.05)
-colorizer.set_option(rs.option.color_scheme,2)
-colorizer.set_option(rs.option.histogram_equalization_enabled,0)
+if(device_type == "L500"):
+    depth_sensor.set_option(rs.option.visual_preset,5)
+else:
+    filter_HF = rs.hole_filling_filter()
+    filter_HF.set_option(rs.option.holes_fill, 3)
+    colorizer = rs.colorizer()
+    colorizer.set_option(rs.option.visual_preset,1)
+    colorizer.set_option(rs.option.min_distance,0.2)        
+    colorizer.set_option(rs.option.max_distance,1.05)
+    colorizer.set_option(rs.option.color_scheme,2)
+    colorizer.set_option(rs.option.histogram_equalization_enabled,0)
 
 align_to = rs.stream.color
 align = rs.align(align_to)
@@ -63,30 +66,28 @@ while(True):
     aligned_frames = align.process(frames) # aligned frames
     depth_frame = aligned_frames.get_depth_frame()
     color_frame = aligned_frames.get_color_frame()
-    
-    #D435
-    filtered = filter_HF.process(depth_frame)
-    filtered = colorizer.colorize(filtered)
-    depth_colorized = np.asanyarray(filtered.get_data())
-    depth_colorized = depth_colorized[:,:,0:1]
-    #depth_colorized = depth_colorized[..., np.newaxis]
-    
-    #D515
-    depth_image = np.asanyarray(depth_frame.get_data())
-    color_image = np.asanyarray(color_frame.get_data())
-    rawdepth = np.asanyarray(depth_frame.get_data())
-    min = 0.2
-    max = 1.05
-    mapped_depth = np.clip(rawdepth*depth_scale,min,max)
-    norm = lambda n: n/max
-    mapped_depth = 255-norm(mapped_depth)*255
-    mapped_depth = mapped_depth[..., np.newaxis]
 
-    #D515
-    #rgbd = np.concatenate([color_image,mapped_depth.astype("uint8")],axis=2)
+    if(device_type == "L500"):
+        depth_image = np.asanyarray(depth_frame.get_data())
+        color_image = np.asanyarray(color_frame.get_data())
+        rawdepth = np.asanyarray(depth_frame.get_data())
+        min = 0.2
+        max = 1.05
+        mapped_depth = np.clip(rawdepth*depth_scale,min,max)
+        norm = lambda n: n/max
+        mapped_depth = 255-norm(mapped_depth)*255
+        mapped_depth = mapped_depth[..., np.newaxis]
 
-    #D435
-    rgbd = np.concatenate([color_image,depth_colorized.astype("uint8")],axis=2)
+        rgbd = np.concatenate([color_image,mapped_depth.astype("uint8")],axis=2)
+    else:
+        filtered = filter_HF.process(depth_frame)
+        filtered = colorizer.colorize(filtered)
+        depth_colorized = np.asanyarray(filtered.get_data())
+        depth_colorized = depth_colorized[:,:,0:1]
+        #depth_colorized = depth_colorized[..., np.newaxis]
+
+        rgbd = np.concatenate([color_image,depth_colorized.astype("uint8")],axis=2)
+
     detect(rgbd)
     
 pipeline.stop()
