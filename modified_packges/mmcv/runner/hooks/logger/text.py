@@ -108,6 +108,6 @@ class TextLoggerHook(LoggerHook):
             log_dict[name] = val
 
         # length should depend on the previous message
-        print ("\033[A                                                                                                                                                                      \033[A")
+        # print ("\033[A                                                                                                                                                                      \033[A")
         self._log_info(log_dict, runner)
         self._dump_log(log_dict, runner)
