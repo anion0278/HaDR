@@ -11,8 +11,10 @@ path = os.path.abspath("..\HGR_CNN")
 sys.path.insert(0,path)
 import pyrealsense2 as rs
 
-config_file = '../SOLO/paper/tested_configs/solov2_r101_fpn_custom.py'
-checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
+config_file = '../SOLO/paper/tested_configs/solov2_light_448_r50_fpn_custom.py'
+
+#checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
+checkpoint_file = 'c:/models/lastest_solov2_light_448_r50_fpn.pth'
 
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
 model.CLASSES = ["hand"]
@@ -50,6 +52,9 @@ device_type = str(device.get_info(rs.camera_info.product_line))
 depth_sensor = profile.get_device().first_depth_sensor()
 depth_scale = depth_sensor.get_depth_scale()
 
+filter_HF = rs.hole_filling_filter()
+filter_HF.set_option(rs.option.holes_fill, 3)
+
 if(device_type == "L500"):
     depth_sensor.set_option(rs.option.visual_preset,5)
 else:
@@ -73,8 +78,11 @@ while(True):
 
     depth_image = np.asanyarray(depth_frame.get_data())
     color_image = np.asanyarray(color_frame.get_data())
+
+    filtered = filter_HF.process(depth_frame)
     if(device_type == "L500"):
-        rawdepth = np.asanyarray(depth_frame.get_data())
+
+        rawdepth = np.asanyarray(filtered.get_data())
         min = 0.2
         max = 1.05
         mapped_depth = np.clip(rawdepth*depth_scale,min,max)
@@ -84,7 +92,7 @@ while(True):
 
         rgbd = np.concatenate([color_image,mapped_depth.astype("uint8")],axis=2)
     else:
-        filtered = filter_HF.process(depth_frame)
+
         filtered = colorizer.colorize(filtered)
         depth_colorized = np.asanyarray(filtered.get_data())
         depth_colorized = depth_colorized[:,:,0:1]
