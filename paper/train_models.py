@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     storage = wss.storage
 
-    test_tag = "1B"
+    experiment_tag = "1B"
     arch_name = "solov2_r101_fpn"
     timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     train_dataset_path = storage + ':/datasets/' + training_dataset
     val_dataset_path =  storage + ":/datasets/" + validation_dataset
 
-    output_dir = test_tag + "-" + arch_name + "-" + training_dataset + dataset_size + "-" + timestamp
+    output_dir = experiment_tag + "-" + arch_name + "-" + training_dataset + dataset_size + "-" + timestamp
 
     print("CURRENT CONFIGURATION ID: " + output_dir)
 
