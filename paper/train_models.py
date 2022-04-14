@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = 0
-    cfg.total_epochs = 2
+    cfg.total_epochs = 10
     cfg.lr_config = dict(policy='poly', power=0.9, min_lr=1e-7, by_epoch=False) # if by_epoch = False, then changes according to iteration
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
@@ -88,9 +88,8 @@ if __name__ == '__main__':
 
     cfg.load_from = latest_checkpoint
     cfg.optimizer.lr = 1e-5
-    cfg.lr_config.policy = "step"
     cfg.model.backbone.frozen_stages = 0
-    cfg.total_epochs = 2
+    cfg.total_epochs = 20
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     train_detector(model, datasets, cfg, distributed=False, validate=False)
     save_checkpoint(model, cfg.work_dir + "/final_" + arch_name + ".pth")

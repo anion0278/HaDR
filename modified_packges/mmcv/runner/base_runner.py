@@ -401,7 +401,7 @@ class BaseRunner(metaclass=ABCMeta):
             return
         elif isinstance(lr_config, dict):
             assert 'policy' in lr_config
-            policy_type = lr_config.pop('policy')
+            policy_type = lr_config['policy']
             # If the type of policy is all in lower case, e.g., 'cyclic',
             # then its first letter will be capitalized, e.g., to be 'Cyclic'.
             # This is for the convenient usage of Lr updater.
@@ -422,7 +422,7 @@ class BaseRunner(metaclass=ABCMeta):
             return
         if isinstance(momentum_config, dict):
             assert 'policy' in momentum_config
-            policy_type = momentum_config.pop('policy')
+            policy_type = momentum_config['policy']
             # If the type of policy is all in lower case, e.g., 'cyclic',
             # then its first letter will be capitalized, e.g., to be 'Cyclic'.
             # This is for the convenient usage of momentum updater.
