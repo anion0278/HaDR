@@ -1,5 +1,7 @@
 num_classes = 2
 
+resolution = (256, 320)
+
 # model settings
 model = dict(
     type='MaskRCNN',
@@ -149,7 +151,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(448, 256),
+        img_scale=(256, 320),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -194,7 +196,7 @@ log_config = dict(
     interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings

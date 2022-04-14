@@ -11,10 +11,10 @@ path = os.path.abspath("..\HGR_CNN")
 sys.path.insert(0,path)
 import pyrealsense2 as rs
 
-config_file = '../SOLO/paper/tested_configs/solov2_light_448_r50_fpn_custom.py'
 
-#checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
-checkpoint_file = 'c:/models/lastest_solov2_light_448_r50_fpn.pth'
+config_file = '../SOLO/paper/tested_configs/solov2_light_448_r50_fpn_custom.py'
+# checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
+checkpoint_file = 'D:/models/two_hands_box.pth'
 
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
 model.CLASSES = ["hand"]

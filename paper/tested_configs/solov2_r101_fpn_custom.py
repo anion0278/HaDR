@@ -1,4 +1,4 @@
-resolution = (256, 448) # SEQUENCE !!
+resolution = (256, 320) # SEQUENCE !!
 
 # model settings
 model = dict(
@@ -69,7 +69,7 @@ train_pipeline = [
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-         img_scale=[(198, 320), (288, 480)],
+         img_scale=[(224, 288), (288, 352)],
          multiscale_mode='range',
          keep_ratio=False),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
@@ -111,13 +111,12 @@ val_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
 
     # these are needed for formatting.py, which checks keys in dict, such as scale, flip
-    dict(type='Resize',
-         img_scale=[resolution],
-         multiscale_mode='value',
-         keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
+    # dict(type='Resize',
+    #      img_scale=[resolution],
+    #      multiscale_mode='value',
+    #      keep_ratio=True),
+    # dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
-
     dict(type='ConvertRgbdToBgrd'),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
@@ -125,7 +124,7 @@ val_pipeline = [
 ]
 data = dict(
     imgs_per_gpu=8,
-    workers_per_gpu=8,
+    workers_per_gpu=4,
     train=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/instances_train2017.json',
@@ -159,7 +158,7 @@ log_config = dict(
     interval=50,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings

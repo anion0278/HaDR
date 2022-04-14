@@ -279,9 +279,11 @@ class Runner(object):
         self.data_loader = data_loader
         self.call_hook('before_val_epoch')
 
+        print("Validation iterations: ")
         for i, data_batch in enumerate(data_loader):
             self._inner_iter = i
             self.call_hook('before_val_iter')
+            print(str(i+1) + ", ", end = '')
             with torch.no_grad():
                 outputs = self.batch_processor(
                     self.model, data_batch, train_mode=False, **kwargs)
@@ -292,6 +294,7 @@ class Runner(object):
                                        outputs['num_samples'])
             self.outputs = outputs
             self.call_hook('after_val_iter')
+        print("")
 
         self.call_hook('after_val_epoch')
 

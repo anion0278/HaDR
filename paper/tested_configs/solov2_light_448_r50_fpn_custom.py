@@ -1,4 +1,4 @@
-resolution = (256, 448) # CORRECT sequnce, checked in loading.py !!
+resolution = (256, 320) # CORRECT sequnce, checked in loading.py !!
 
 # model settings
 model = dict(
@@ -67,7 +67,7 @@ train_pipeline = [
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-         img_scale=[(198, 320), (288, 480)], # CORRECT sequnce, checked in loading.py H, W !!
+         img_scale=[(240, 320), (480, 640)], # CORRECT sequnce, checked in loading.py H, W !!
          multiscale_mode='range',
          keep_ratio=False),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
@@ -97,13 +97,28 @@ test_pipeline = [
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
-            # dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
             dict(type='Pad', size_divisor=32), # Pad is required ! since our Real-cam images have shape 240x320 
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
         ])
+]
+val_pipeline = [ 
+    dict(type='LoadRgbdImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+
+    # these are needed for formatting.py, which checks keys in dict, such as scale, flip
+    dict(type='Resize',
+         img_scale=[resolution],
+         multiscale_mode='value',
+         keep_ratio=True),
+    dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='ConvertRgbdToBgrd'),
+    dict(type='Pad', size_divisor=32),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 data = dict(
     imgs_per_gpu=16,
@@ -124,18 +139,17 @@ data = dict(
         img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
 # optimizer
-# optimizer = dict(type='Adam', lr=0.002, weight_decay=0.001) 
 optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
-lr_config = dict(policy='poly', power=0.9, min_lr=1e-8, by_epoch=False) # if by_epoch = False, then changes according to iteration
+# lr_config = dict(policy='poly', power=0.9, min_lr=1e-8, by_epoch=False) # if by_epoch = False, then changes according to iteration
 
-# lr_config = dict(
-#     policy='step',
-#     warmup='linear',
-#     warmup_iters=50,
-#     warmup_ratio=0.01,
-#     step=[27, 33])
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=50,
+    warmup_ratio=0.01,
+    step=[27, 33])
 
 
 # yapf:disable
@@ -143,7 +157,7 @@ log_config = dict(
     interval=1,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(type='TensorboardLoggerHook')
     ])
 # yapf:enable
 # runtime settings
