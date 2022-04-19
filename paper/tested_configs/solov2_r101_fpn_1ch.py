@@ -64,7 +64,7 @@ data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675], std=[58.395], to_rgb=False) 
 train_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', color_type = "grayscale"),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
          img_scale=[(224, 288), (288, 352)],
@@ -86,7 +86,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 test_pipeline = [
-    dict(type='LoadRgbdImageFromFile'),
+    dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[resolution],
@@ -94,24 +94,15 @@ test_pipeline = [
         transforms=[
             dict(type='Resize', keep_ratio=True),
             dict(type='Normalize', **img_norm_cfg),
-            dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
             dict(type='Pad', size_divisor=32), 
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
         ])
 ]
 val_pipeline = [ 
-    dict(type='LoadRgbdImageFromFile'),
+    dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-
-    # these are needed for formatting.py, which checks keys in dict, such as scale, flip
-    # dict(type='Resize',
-    #      img_scale=[resolution],
-    #      multiscale_mode='value',
-    #      keep_ratio=True),
-    # dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='ConvertRgbdToBgrd'),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
@@ -119,21 +110,10 @@ val_pipeline = [
 data = dict(
     imgs_per_gpu=8,
     workers_per_gpu=4,
-    train=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/instances_train2017.json',
-        img_prefix=data_root + 'train2017/',
-        pipeline=train_pipeline),
-    val=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
-        pipeline=test_pipeline),
-    test=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
-        pipeline=test_pipeline))
+    train=dict(pipeline=train_pipeline),
+    val=dict(pipeline=val_pipeline),
+    test=dict(pipeline=test_pipeline))
+    
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.001)
 # learning policy

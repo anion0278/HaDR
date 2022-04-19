@@ -41,7 +41,7 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
     if not (image.ndim in [2,3]):
         raise AttributeError('Expecting image.shape to be either (height x width) or (height x width x channels)')
     if image.ndim == 2:
-        image = np.stack((image,)*3, axis=-1)
+        image = image[..., np.newaxis] #np.stack((image,)*1, axis=-1)
     
     height, width, channels = image.shape
     
@@ -52,7 +52,7 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
         raise AttributeError('Expecting image to have either 1 or 3 channels (last dimension)')
         
     if channels == 1:
-        image = np.stack((np.squeeze(image),)*3, axis=-1)
+         image = np.stack((np.squeeze(image),)*3, axis=-1)
     
     if not severity in [1,2,3,4,5]:
         raise AttributeError('Severity must be an integer in [1, 5]')
@@ -66,6 +66,9 @@ def corrupt(image, severity=1, corruption_name=None, corruption_number=-1):
     else:
         raise ValueError("Either corruption_name or corruption_number must be passed")
 
+    if channels == 1:
+        image_corrupted = image_corrupted[:,:,0]
+        
     return np.uint8(image_corrupted)
 
 def get_corruption_names(subset='common'):

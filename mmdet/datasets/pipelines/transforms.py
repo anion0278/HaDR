@@ -700,17 +700,23 @@ class MinIoURandomCrop(object):
 
 @PIPELINES.register_module
 class DecimateDepth(object):
-    def __init__(self, probability = 0.5): 
+    def __init__(self, decimator = 10.0, probability = 0.5): 
         self.probability = probability
+        self.decimator = float(decimator)
 
     def __call__(self, results):
         if np.random.rand() < self.probability: 
-            img_rgb = results['img'][:,:,0:3]
-            img_d = results['img'][:,:,-1]
-            img_d = img_d[..., np.newaxis]
-            img_d = np.floor_divide(img_d, 10)
-            img_d = (img_d * 10.0).astype("uint8")          
-            results['img'] = np.concatenate([img_rgb, img_d], axis=2)
+            if len(results['img'].shape) == 4:
+                img_rgb = results['img'][:,:,0:3]
+                img_d = results['img'][:,:,-1]
+                img_d = img_d[..., np.newaxis]
+                img_d = np.floor_divide(img_d, self.decimator)
+                img_d = (img_d * self.decimator).astype("uint8")          
+                results['img'] = np.concatenate([img_rgb, img_d], axis=2)
+            else:
+                img_d = results['img']
+                img_d = np.floor_divide(img_d, 10)
+                results['img'] = (img_d * 10.0).astype("uint8")    
         return results
 
     def __repr__(self):
@@ -736,8 +742,6 @@ class CorruptRgbd(object):
         if np.random.rand() < self.probability: # !!!
             actual_severity = rn.randint(1, self.severity)
             
-            # also made changes in brightness and contrast corruptions (see imagecorruption package)
-
             if self.channels == "random": self.channels = random.choise(["all","color","depth"])
 
             if self.channels in ["all", "color"]: # IT IS NOT POSSIBLE TO Process all channels with the same preset !! the processing of RGB and D is random each time
@@ -751,7 +755,7 @@ class CorruptRgbd(object):
                 img_d = corrupt(
                     results['img'][:,:,-1].astype(np.uint8),
                     corruption_name=self.corruption,
-                    severity=actual_severity)[:,:,1]
+                    severity=actual_severity)
             else: img_d = results['img'][:,:,-1]
             img_d = img_d[..., np.newaxis]
 
@@ -767,23 +771,26 @@ class CorruptRgbd(object):
 @PIPELINES.register_module
 class Corrupt(object):
 
-    def __init__(self, corruption, severity=1):
+    def __init__(self, corruption, probability = 0.5, max_severity=1):
         self.corruption = corruption
-        self.severity = severity
+        self.max_severity = max_severity
+        self.probability = probability
 
     def __call__(self, results):
         if corrupt is None:
             raise RuntimeError('imagecorruptions is not installed')
-        results['img'] = corrupt(
-            results['img'].astype(np.uint8),
-            corruption_name=self.corruption,
-            severity=self.severity)
+        if np.random.rand() < self.probability: # !!!
+            actual_severity = rn.randint(1, self.max_severity)
+            results['img'] = corrupt(
+                results['img'].astype(np.uint8),
+                corruption_name=self.corruption,
+                severity=actual_severity)
         return results
 
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += '(corruption={}, severity={})'.format(
-            self.corruption, self.severity)
+            self.corruption, self.max_severity)
         return repr_str
 
 

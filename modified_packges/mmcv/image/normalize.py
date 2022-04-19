@@ -36,9 +36,9 @@ def imnormalize_(img, mean, std, to_rgb=True):
     mean = np.float64(mean.reshape(1, -1))
     stdinv = 1 / np.float64(std.reshape(1, -1))
     if to_rgb:
-        cv2.cvtColor(img, cv2.COLOR_BGR2RGB, img)  # inplace
-    img = cv2.subtract(img, mean) # fixes some range/cast error
-    cv2.multiply(img, stdinv, img)  # inplace
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.subtract(img, mean) 
+    img = cv2.multiply(img, stdinv)
     return img
 
 
