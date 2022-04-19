@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     print("CURRENT CONFIGURATION ID: " + output_dir)
 
-    cfg = Config.fromfile('./paper/tested_configs/' + arch_name + '_custom.py')
+    cfg = Config.fromfile('./paper/tested_configs/%s.py' % arch_name)
     cfg.load_from = storage + ":/models/" + arch_name + '.pth'
     cfg.work_dir = storage + ":/models/" + output_dir
     os.makedirs(cfg.work_dir, exist_ok=True)

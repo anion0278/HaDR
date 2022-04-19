@@ -704,15 +704,12 @@ class DecimateDepth(object):
         self.probability = probability
 
     def __call__(self, results):
-        if np.random.rand() < self.probability: # !!!
-
+        if np.random.rand() < self.probability: 
             img_rgb = results['img'][:,:,0:3]
-            
             img_d = results['img'][:,:,-1]
             img_d = img_d[..., np.newaxis]
             img_d = np.floor_divide(img_d, 10)
             img_d = (img_d * 10.0).astype("uint8")          
-
             results['img'] = np.concatenate([img_rgb, img_d], axis=2)
         return results
 

@@ -9,7 +9,7 @@ model = dict(
     backbone=dict(
         type='ResNet',
         depth=101,
-        in_channels = 4,
+        in_channels = 1,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=0, # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -120,29 +120,25 @@ test_cfg = dict(
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53, 128.0], std=[58.395, 57.12, 57.375, 57.0], to_rgb=False) # !!!
+    mean=[123.675], std=[58.395], to_rgb=False) # !!!
 train_pipeline = [
-    dict(type='LoadRgbdImageFromFile'),
+    dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-         img_scale=[(448, 256)],
-         multiscale_mode='value',
+         img_scale=[(224, 288), (288, 352)],
+         multiscale_mode='range',
          keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
     dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
     dict(type='DecimateDepth', probability=0.5),
-    dict(type='CorruptRgbd', corruption="motion_blur", max_severity=3),
-    dict(type='CorruptRgbd', corruption="elastic_transform", max_severity=2),
-    dict(type='CorruptRgbd', corruption="brightness", max_severity=4),
-    dict(type='CorruptRgbd', corruption="contrast", max_severity=3),
-    dict(type='CorruptRgbd', corruption="saturate", max_severity=3),
-    dict(type='CorruptRgbd', corruption="fog", max_severity=4),
-    dict(type='CorruptRgbd', corruption="defocus_blur", max_severity=2),
-    # dict(type='CorruptRgbd', corruption="glass_blur", max_severity=2),
-    # dict(type='CorruptRgbd', corruption="pixelate", max_severity=4),
-    # dict(type='CorruptRgbd', corruption="zoom_blur", max_severity=1),
+    dict(type='Corrupt', corruption="motion_blur", max_severity=3),
+    dict(type='Corrupt', corruption="elastic_transform", max_severity=2),
+    dict(type='Corrupt', corruption="brightness", max_severity=4),
+    dict(type='Corrupt', corruption="contrast", max_severity=3),
+    dict(type='Corrupt', corruption="saturate", max_severity=3),
+    dict(type='Corrupt', corruption="fog", max_severity=4),
+    dict(type='Corrupt', corruption="defocus_blur", max_severity=2),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
