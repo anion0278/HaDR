@@ -95,6 +95,6 @@ if __name__ == "__main__":
     cfg.model.backbone.frozen_stages = 0
     cfg.total_epochs = 20
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
-    train_detector(model, datasets, cfg, distributed=False, validate=False)
+    train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
     save_checkpoint(model, cfg.work_dir + "/final_" + arch_name + ".pth")
     print("Final (full network) training finished!")
