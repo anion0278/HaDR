@@ -87,7 +87,7 @@ train_pipeline = [
         meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg')),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', color_type = "grayscale"),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[resolution],
@@ -101,7 +101,7 @@ test_pipeline = [
         ])
 ]
 val_pipeline = [ 
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', color_type = "grayscale"),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
          img_scale=[resolution],

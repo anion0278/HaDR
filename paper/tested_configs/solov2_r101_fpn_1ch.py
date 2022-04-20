@@ -100,7 +100,7 @@ test_pipeline = [
         ])
 ]
 val_pipeline = [ 
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadImageFromFile', color_type = "grayscale"),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
