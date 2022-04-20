@@ -166,7 +166,8 @@ val_pipeline = [
     dict(type='ConvertRgbdToBgrd'),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'], 
+        meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg')),
 ]
 
 data = dict(

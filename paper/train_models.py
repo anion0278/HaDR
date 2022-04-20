@@ -25,7 +25,9 @@ if __name__ == "__main__":
     storage = wss.storage
 
     experiment_tag = "1B"
-    arch_name = "mask_rcnn_r101_fpn"
+    arch_name = "solov2_light_448_r50_fpn"
+    # arch_name = "mask_rcnn_r101_fpn"
+    # arch_name = "solov2_r101_fpn"
     channels = 1
     timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
 
@@ -41,7 +43,7 @@ if __name__ == "__main__":
 
     arch_full_name = arch_name + "_%sch" % channels
 
-    output_dir = experiment_tag + "-" + arch_full_name + "-" + training_dataset + dataset_size + "-" + timestamp
+    output_dir = experiment_tag + "-" + arch_full_name + "-" + training_dataset + "_"+ dataset_size + "-" + timestamp
 
     print("CURRENT CONFIGURATION ID: " + output_dir)
 

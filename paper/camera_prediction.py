@@ -12,7 +12,7 @@ sys.path.insert(0,path)
 import pyrealsense2 as rs
 
 
-config_file = '../SOLO/paper/tested_configs/solov2_light_448_r50_fpn_custom.py'
+config_file = '../SOLO/paper/tested_configs/solov2_light_448_r50_fpn_4ch.py'
 # checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
 checkpoint_file = 'D:/models/two_hands_box.pth'
 
