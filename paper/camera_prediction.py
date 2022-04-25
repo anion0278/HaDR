@@ -10,20 +10,30 @@ import sys, os
 path = os.path.abspath("..\HGR_CNN")
 sys.path.insert(0,path)
 import pyrealsense2 as rs
+import mmcv
 
-
-config_file = '../SOLO/paper/tested_configs/solov2_light_448_r50_fpn_4ch.py'
-# checkpoint_file = '../SOLO/checkpoints/r101_e7_two_hands.pth'
-checkpoint_file = 'D:/models/two_hands_box.pth'
+config_file = '../SOLO/paper/tested_configs/solov2_r101_fpn_1ch.py'
+# checkpoint_file = '../SOLO/checkpoints/solov2_r101_fpn.pth'
+checkpoint_file = r'G:\models\2G-solov2_r101_fpn_1ch-matte_320x256_full-Thu_D21_M04_16h_21m\final_solov2_r101_fpn.pth'
+cfg = mmcv.Config.fromfile(config_file)
 
 model = init_detector(config_file, checkpoint_file, device='cuda:0')
+
 model.CLASSES = ["hand"]
+
+
+def get_tested_image(input_channels, img_rbgd):
+    options = { 1: img_rbgd[:,:,3:4], 
+                3: img_rbgd[:,:,0:3],
+                4: img_rbgd }
+    return options[input_channels]
+
 
 def detect(img_rbgd):
     start = time.time()
-    result = predict_image(model, img_rbgd)
-    elapsed_time = time.time() - start
-    title = "Inference time: %.2f s, FPS: %.1f" % (elapsed_time, 1/elapsed_time)
+    tested_image = get_tested_image(cfg.model.backbone.in_channels, img_rbgd)
+    result = predict_image(model, tested_image)
+    title = "Inference time: %.2f s" % (time.time() - start)
     depth = img_rbgd[:,:,3:4]
     depth = np.stack((np.squeeze(depth),)*3, axis=-1)
     imgd_res = show_result_ins(depth, result, model.CLASSES, score_thr=0.5)
