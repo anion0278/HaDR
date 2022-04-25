@@ -13,10 +13,25 @@ from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
 from mmdet.apis import train_detector
 import ws_specific_settings as wss
+import common_settings as s
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
+
+def get_pipelines(in_channels):
+    from mmcv import Config
+    options = {  
+        1 : "pipelines_d",
+        3 : "pipelines_rgb",
+        4 : "pipelines_rgbd" }
+    return Config.fromfile(s.path_to_configs % options[in_channels],'temp_pipe_config').data
+
+def get_config(arch_name, channels):
+    cfg = Config.fromfile(s.path_to_configs % arch_name, 'temp')
+    cfg.model.backbone.in_channels = channels
+    cfg.data = get_pipelines(cfg.model.backbone.in_channels)
+    return cfg
 
 if __name__ == "__main__":
  
@@ -25,8 +40,9 @@ if __name__ == "__main__":
     storage = wss.storage
 
     experiment_tag = "2G"
+    # arch_name = "fast_mask_rcnn_r101_fpn"
     # arch_name = "solov2_light_448_r50_fpn"
-    # arch_name = "mask_rcnn_r101_fpn"
+    arch_name = "mask_rcnn_r101_fpn"
     # arch_name = "solov2_r101_fpn"
     channels = 4
 
@@ -40,15 +56,14 @@ if __name__ == "__main__":
     main_channel = "depth" if channels == 1 else "color" 
     timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
 
-    arch_full_name = arch_name + "_%sch" % channels
+    config_id = experiment_tag + "-" + arch_name + "_%sch" % channels + "-" + training_dataset + "_"+ dataset_size + "-" + timestamp
 
-    output_dir = experiment_tag + "-" + arch_full_name + "-" + training_dataset + "_"+ dataset_size + "-" + timestamp
+    print("CURRENT CONFIGURATION ID: " + config_id)
 
-    print("CURRENT CONFIGURATION ID: " + output_dir)
+    cfg = get_config(arch_name, channels)
 
-    cfg = Config.fromfile("./paper/tested_configs/%s.py" % arch_full_name)
     cfg.load_from = storage + ":/models/" + arch_name + ".pth"
-    cfg.work_dir = storage + ":/models/" + output_dir
+    cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
 
     cfg.data.train.ann_file = train_dataset_path + "/instances_hands_%s.json" % dataset_size 

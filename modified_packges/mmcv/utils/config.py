@@ -80,15 +80,15 @@ class Config(object):
     """
 
     @staticmethod
-    def _file2dict(filename):
+    def _file2dict(filename, temp_module_name = '_tempconfig'):
         filename = osp.abspath(osp.expanduser(filename))
         check_file_exist(filename)
         if filename.endswith('.py'):
             with tempfile.TemporaryDirectory() as temp_config_dir:
                 shutil.copyfile(filename,
-                                osp.join(temp_config_dir, '_tempconfig.py'))
+                                osp.join(temp_config_dir, temp_module_name + '.py'))
                 sys.path.insert(0, temp_config_dir)
-                mod = import_module('_tempconfig')
+                mod = import_module(temp_module_name)
                 sys.path.pop(0)
                 cfg_dict = {
                     name: value
@@ -96,7 +96,7 @@ class Config(object):
                     if not name.startswith('__')
                 }
                 # delete imported module
-                del sys.modules['_tempconfig']
+                del sys.modules[temp_module_name]
         elif filename.endswith(('.yml', '.yaml', '.json')):
             import mmcv
             cfg_dict = mmcv.load(filename)
@@ -148,8 +148,8 @@ class Config(object):
                 b[k] = v
 
     @staticmethod
-    def fromfile(filename):
-        cfg_dict, cfg_text = Config._file2dict(filename)
+    def fromfile(filename, temp_module_name):
+        cfg_dict, cfg_text = Config._file2dict(filename, temp_module_name)
         return Config(cfg_dict, cfg_text=cfg_text, filename=filename)
 
     @staticmethod

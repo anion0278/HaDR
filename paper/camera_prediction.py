@@ -11,10 +11,10 @@ path = os.path.abspath("..\HGR_CNN")
 sys.path.insert(0,path)
 import pyrealsense2 as rs
 import mmcv
+import ws_specific_settings as wss
 
 config_file = '../SOLO/paper/tested_configs/solov2_r101_fpn_1ch.py'
-# checkpoint_file = '../SOLO/checkpoints/solov2_r101_fpn.pth'
-checkpoint_file = r'G:\models\2G-solov2_r101_fpn_1ch-matte_320x256_full-Thu_D21_M04_16h_21m\final_solov2_r101_fpn.pth'
+checkpoint_file = wss.storage + ":/models/" + "2G-solov2_r101_fpn_1ch-matte_320x256_full-Thu_D21_M04_16h_21m" +"/final_solov2_r101_fpn.pth"
 cfg = mmcv.Config.fromfile(config_file)
 
 model = init_detector(config_file, checkpoint_file, device='cuda:0')

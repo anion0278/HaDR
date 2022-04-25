@@ -1,7 +1,6 @@
 resolution = (256, 320) # CORRECT sequnce, checked in loading.py !!
 
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True) 
+img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True) # !!!
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
@@ -48,5 +47,13 @@ val_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'], 
+        meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg')),
 ]
+
+data = dict(
+    imgs_per_gpu=8,
+    workers_per_gpu=4,
+    train=dict(pipeline=train_pipeline),
+    val=dict(pipeline=val_pipeline),
+    test=dict(pipeline=test_pipeline))
