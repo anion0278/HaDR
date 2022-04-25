@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # arch_name = "solov2_light_448_r50_fpn"
     arch_name = "mask_rcnn_r101_fpn"
     # arch_name = "solov2_r101_fpn"
-    channels = 1
+    channels = 4
 
     training_dataset = "sim_train_320x256" 
     validation_dataset = "sim_val_320x256"
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     cfg.log_config.interval = 1
 
     cfg.optimizer.lr = 1e-4
-    cfg.model.backbone.frozen_stages = 0
+    cfg.model.backbone.frozen_stages = 4
     cfg.total_epochs = 10
     cfg.lr_config = dict(policy="poly", power=0.9, min_lr=1e-7, by_epoch=False) # if by_epoch = False, then changes according to iteration
 
