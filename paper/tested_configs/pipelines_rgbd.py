@@ -1,12 +1,13 @@
-resolution = (256, 320) # CORRECT sequnce, checked in loading.py !!
+resolution = (256, 320) # CORRECT sequnce, checked in loading.py 
 
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53, 128.0], std=[58.395, 57.12, 57.375, 57.0], to_rgb=False) # !!!
+import common_settings
+img_norm_cfg = common_settings.get_norm_params(4)
+
 train_pipeline = [
     dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-         img_scale=[(240, 320), (480, 640)], # CORRECT sequnce, checked in loading.py H, W !!
+         img_scale=[(240, 320), (480, 640)], # CORRECT sequnce, checked in loading.py H, W
          multiscale_mode='range',
          keep_ratio=False),
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),

@@ -1,7 +1,8 @@
 resolution = (256, 320) # CORRECT sequnce, checked in loading.py !!
 
-img_norm_cfg = dict(
-    mean=[123.675], std=[58.395], to_rgb=False) # !!!
+import common_settings
+img_norm_cfg = common_settings.get_norm_params(1)
+
 train_pipeline = [
     dict(type='LoadImageFromFile', color_type="grayscale"),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
@@ -22,8 +23,7 @@ train_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'], 
-        meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg')),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', color_type = "grayscale"),
@@ -50,7 +50,8 @@ val_pipeline = [
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'],
+        meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg')),
 ]
 data = dict(
     imgs_per_gpu=8,
