@@ -190,9 +190,10 @@ def main():
 
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
-    PREFIX = os.path.abspath(r'G:\datasets\sim_validation_dataset')
+    PREFIX = os.path.abspath('E:/datasets/real_cam_dataset_valid')
     cfg.data.test.ann_file = PREFIX + '/instances_hands_full.json'
-    cfg.data.test.img_prefix = PREFIX + "/color/"
+    cfg.data.test.img_prefix = PREFIX + "/depth/" if cfg.model.backbone.in_channels == 1 else PREFIX + "/color/"
+    cfg.data.test.type =  "CocoDataset"
 
     dataset = build_dataset(cfg.data.test)
     dataset.CLASSES = ["hand"] # !!!!!!!!!!!!!!!!!!!!

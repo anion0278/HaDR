@@ -396,7 +396,13 @@ class SOLOv2Head(nn.Module):
         assert len(cate_preds) == len(kernel_preds)
 
         # overall info.
-        h, w, _ = img_shape
+        try:
+            h, w, _ = img_shape
+        except:
+            pass
+        
+        h, w = img_shape
+
         upsampled_size_out = (featmap_size[0] * 4, featmap_size[1] * 4)
 
         # process.
