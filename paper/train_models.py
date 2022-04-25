@@ -27,18 +27,18 @@ if __name__ == "__main__":
     experiment_tag = "2G"
     # arch_name = "solov2_light_448_r50_fpn"
     # arch_name = "mask_rcnn_r101_fpn"
-    arch_name = "solov2_r101_fpn"
-    channels = 1
-    timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
+    # arch_name = "solov2_r101_fpn"
+    channels = 4
 
-    training_dataset = "matte_320x256" 
-    validation_dataset = "sim_val"
+    training_dataset = "sim_train_320x256" 
+    validation_dataset = "sim_val_320x256"
     dataset_size = "full" 
     if TEST:
         dataset_size = "100" 
     train_dataset_path = storage + ":/datasets/" + training_dataset
     val_dataset_path =  storage + ":/datasets/" + validation_dataset
     main_channel = "depth" if channels == 1 else "color" 
+    timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
 
     arch_full_name = arch_name + "_%sch" % channels
 
