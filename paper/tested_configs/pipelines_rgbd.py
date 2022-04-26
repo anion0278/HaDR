@@ -20,8 +20,8 @@ train_pipeline = [
     dict(type='CorruptRgbd', corruption="saturate", max_severity=3),
     dict(type='CorruptRgbd', corruption="fog", max_severity=4),
     dict(type='CorruptRgbd', corruption="defocus_blur", max_severity=2),
+    dict(type='ConvertRgbdToBgrd'), 
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='ConvertRgbdToBgrd'), # TODO CHECK whether it works correctly !!!!
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),

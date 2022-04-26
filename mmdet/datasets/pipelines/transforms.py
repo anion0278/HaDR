@@ -334,11 +334,10 @@ class Normalize(object):
             default is true.
     """
 
-    def __init__(self, mean, std, to_rgb=True, is_rgbd=False):
+    def __init__(self, mean, std, to_rgb=True):
         self.mean = np.array(mean, dtype=np.float32)
         self.std = np.array(std, dtype=np.float32)
         self.to_rgb = to_rgb
-        self.is_rgbd = is_rgbd
 
     def __call__(self, results):
         results['img'] = mmcv.imnormalize(results['img'], self.mean, self.std,

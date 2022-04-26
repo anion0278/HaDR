@@ -45,7 +45,7 @@ class ConvertRgbdToBgrd(object):
 
     def __call__(self, results):
         img = results['img']
-        cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA, img)  # inplace
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA) 
         results['img'] = img
         return results
 

@@ -57,6 +57,7 @@ def set_config_params(cfg):
     if "pretrained" in cfg.model: cfg.model.pop("pretrained") # get rid of pretrained backbone since we will init weights from checkpoint
     cfg.lr_config = dict(policy="poly", power=0.9, min_lr=1e-7, by_epoch=False) # if by_epoch = False, then changes according to iteration
     cfg.optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
+    #dict(type='Adam', lr=0.0003, weight_decay=0.0001)
     cfg.optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 
 
@@ -68,7 +69,7 @@ def get_datasets(cfg):
 
 if __name__ == "__main__":
  
-    TEST = True  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
+    TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
 
     storage = wss.storage
 
