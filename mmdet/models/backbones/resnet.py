@@ -510,7 +510,7 @@ class ResNet(nn.Module):
         super(ResNet, self).train(mode)
         self._freeze_stages()
         if mode and self.norm_eval:
-            print("norm layers are locked!")
+            print("BatchNorm layers are frozen!")
             for m in self.modules():
                 # trick: eval have effect on BatchNorm only
                 if isinstance(m, _BatchNorm):

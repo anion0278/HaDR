@@ -3,7 +3,8 @@ num_classes = 2
 # model settings
 model = dict(
     type='SOLOv2',
-    #pretrained='torchvision://resnet50',
+    #pretrained='torchvision://resnet50', # The backbone weights will be overwritten when using load_from or resume_from. 
+    # https://github.com/open-mmlab/mmdetection/issues/7817#issuecomment-1108503826
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -13,7 +14,7 @@ model = dict(
         frozen_stages=-1, # -1 is unfrozen, 0 -> C1 is frozen, 1 - C1, C2 are frozen and so on
         style='pytorch'),
         # norm_eval = True # true by default, "you're fine-tuning to minimize training, it's typically best to keep batch normalization frozen"
-        #https://stackoverflow.com/questions/63016740/why-its-necessary-to-frozen-all-inner-state-of-a-batch-normalization-layer-when
+        # https://stackoverflow.com/questions/63016740/why-its-necessary-to-frozen-all-inner-state-of-a-batch-normalization-layer-when
         # required for traning from scratch
     neck=dict(
         type='FPN',
@@ -62,22 +63,3 @@ test_cfg = dict(
     sigma=2.0,
     max_per_img=100)
 
-optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
-
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=50,
-    warmup_ratio=0.01,
-    step=[27, 33])
-
-
-log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
-
-device_ids = range(1)
-gpu_ids = range(1)
-gpus = 1
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-resume_from = None

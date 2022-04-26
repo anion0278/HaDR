@@ -58,23 +58,3 @@ test_cfg = dict(
     kernel='gaussian',  # gaussian/linear
     sigma=2.0,
     max_per_img=100)
-    
-optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
-
-lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=50,
-    warmup_ratio=0.01,
-    step=[27, 33])
-
-
-log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
-
-device_ids = range(1)
-gpu_ids = range(1)
-gpus = 1
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-resume_from = None
