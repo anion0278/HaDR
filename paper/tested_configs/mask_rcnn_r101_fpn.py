@@ -3,14 +3,14 @@ num_classes = 2
 # model settings
 model = dict(
     type='MaskRCNN',
-    pretrained='torchvision://resnet101',
+    #pretrained='torchvision://resnet101',
     backbone=dict(
         type='ResNet',
         depth=101,
         in_channels = 3,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
-        frozen_stages=0, # !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        frozen_stages=-1,
         style='pytorch'),
     neck=dict(
         type='FPN',

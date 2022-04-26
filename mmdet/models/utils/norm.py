@@ -16,7 +16,7 @@ def build_norm_layer(cfg, num_features, postfix=''):
         cfg (dict): cfg should contain:
             type (str): identify norm layer type.
             layer args: args needed to instantiate a norm layer.
-            requires_grad (bool): [optional] whether stop gradient updates
+            requires_grad (bool): [optional]  whether stop gradient updates: True = gradients need to be computed for this Tensor, False = freeze layer.
         num_features (int): number of channels from input.
         postfix (int, str): appended into norm abbreviation to
             create named layer.

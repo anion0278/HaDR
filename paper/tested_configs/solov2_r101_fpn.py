@@ -3,13 +3,13 @@ num_classes = 2
 # model settings
 model = dict(
     type='SOLOv2',
-    pretrained='torchvision://resnet101',
+    #pretrained='torchvision://resnet101',
     backbone=dict(
         type='ResNet',
         depth=101,
         in_channels = 3,
-        num_stages=4, # there are actually 5 stages, conv1 is freezed whenever num_stages > 1s
-        frozen_stages=4, 
+        num_stages=4, # there are actually 5 stages, conv1 is freezed whenever frozen_stages >= 0
+        frozen_stages=-1, 
         out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
         style='pytorch'), 
     neck=dict(

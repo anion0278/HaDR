@@ -41,8 +41,8 @@ if __name__ == "__main__":
 
     experiment_tag = "2G"
     # arch_name = "fast_mask_rcnn_r101_fpn"
-    # arch_name = "solov2_light_448_r50_fpn"
-    arch_name = "mask_rcnn_r101_fpn"
+    arch_name = "solov2_light_448_r50_fpn"
+    # arch_name = "mask_rcnn_r101_fpn"
     # arch_name = "solov2_r101_fpn"
     channels = 4
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     cfg.load_from = latest_checkpoint
     cfg.optimizer.lr = 1e-5
-    cfg.model.backbone.frozen_stages = 0
+    cfg.model.backbone.frozen_stages = -1
     cfg.total_epochs = 20
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)

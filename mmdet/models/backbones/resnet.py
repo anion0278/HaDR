@@ -320,7 +320,7 @@ class ResNet(nn.Module):
         frozen_stages (int): Stages to be frozen (stop grad and set eval mode).
             -1 means not freezing any parameters.
         norm_cfg (dict): dictionary to construct and config norm layer.
-        norm_eval (bool): Whether to set norm layers to eval mode, namely,
+        norm_eval (bool): Whether to set norm layers to eval mode (True), namely,
             freeze running stats (mean and var). Note: Effect on Batch Norm
             and its variants only.
         with_cp (bool): Use checkpoint or not. Using checkpoint will save some
@@ -510,6 +510,7 @@ class ResNet(nn.Module):
         super(ResNet, self).train(mode)
         self._freeze_stages()
         if mode and self.norm_eval:
+            print("norm layers are locked!")
             for m in self.modules():
                 # trick: eval have effect on BatchNorm only
                 if isinstance(m, _BatchNorm):
