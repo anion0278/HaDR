@@ -27,7 +27,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadRgbdImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
         img_scale=[resolution],
@@ -41,18 +41,17 @@ test_pipeline = [
         ])
 ]
 val_pipeline = [ 
-    dict(type='LoadImageFromFile'),
+    dict(type='LoadRgbdImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
          img_scale=[resolution],
          multiscale_mode='value',
          keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'], 
-        meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg')),
+        meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg', 'scale_factor')),
 ]
 data = dict(
     imgs_per_gpu=8,

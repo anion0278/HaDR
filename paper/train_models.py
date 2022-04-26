@@ -51,6 +51,7 @@ if __name__ == "__main__":
     dataset_size = "full" 
     if TEST:
         dataset_size = "100" 
+        wss.workers = 2
     train_dataset_path = storage + ":/datasets/" + training_dataset
     val_dataset_path =  storage + ":/datasets/" + validation_dataset
     main_channel = "depth" if channels == 1 else "color" 
