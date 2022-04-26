@@ -121,7 +121,7 @@ if __name__ == "__main__":
 # NON-FROZEN
 # TODO DRY function
 
-    cfg.resume_from = latest_checkpoint
+    cfg.load_from = latest_checkpoint
     cfg.optimizer.lr = 1e-5
     cfg.model.backbone.frozen_stages = -1
     cfg.total_epochs = 20
