@@ -2,11 +2,11 @@ path_to_configs = "./paper/tested_configs/%s.py"
 
 # from our train dataset
 sim_train_mean=[101.2224, 99.5584, 96.9216, 35.3792] 
-sim_train_std=[67.3536, 67.2512, 68.8384, 45.978]
+sim_train_std=[67.3536, 67.2512, 68.8384, 45.7896]
 
 # from our val dataset
 sim_val_mean=[102.006, 98.065, 94.952, 37.56] 
-sim_val_std=[39.619, 39.217, 39.583, 43.2]
+sim_val_std=[67.9589, 66.7224, 67.0522, 48.3540]
 
 # from coco
 test_train_mean=[123.675, 116.28, 103.53, 35.3792] 
