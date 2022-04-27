@@ -7,10 +7,13 @@ import camera
 
 import common_settings as s
 s.add_packages_paths()
-from mmdet.apis import init_detector, show_result_ins, predict_image
+from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
-arch_name = "solov2_r101_fpn"
-tested_model_dir = "r101_from_pretrained_coco_5-5-8"
+# arch_name = "fast_mask_rcnn_r101_fpn"
+# arch_name = "solov2_light_448_r50_fpn"
+arch_name = "mask_rcnn_r101_fpn"
+# arch_name = "solov2_r101_fpn"
+tested_model_dir = "maskrcnn-test"
 channels = 4
 
 def get_tested_image(input_channels, img_rbgd):
@@ -23,13 +26,15 @@ def detect(img_rbgd):
     start = time.time()
     tested_image = get_tested_image(cfg.model.backbone.in_channels, img_rbgd)
     result = predict_image(model, tested_image)
-    title = "Inference time: %.2f s" % (time.time() - start)
+    elapsed_time = time.time() - start
+    title = f"Inference time: {elapsed_time:2.2f}s, FPS: {(1/elapsed_time):2.0f}" 
     depth = img_rbgd[:,:,3:4]
     depth = np.stack((np.squeeze(depth),)*3, axis=-1)
-    imgd_res = show_result_ins(depth, result, model.CLASSES, score_thr=0.5)
-    img_res = show_result_ins(img_rbgd[:,:,0:3], result, model.CLASSES, score_thr=0.5)
+    ins_visualization = show_result_pyplot if "mask" in arch_name else show_result_ins # mask rcnn requires different visualization
+    res_img_rgb = ins_visualization(img_rbgd[:,:,0:3], result, model.CLASSES, score_thr=0.5)
+    res_img_d = ins_visualization(depth, result, model.CLASSES, score_thr=0.5)
     window_id = "win id"
-    cv2.imshow(window_id, np.hstack([img_res, imgd_res]))
+    cv2.imshow(window_id, np.hstack([res_img_rgb, res_img_d]))
     cv2.setWindowTitle(window_id, title)
     cv2.waitKey(1)
     
