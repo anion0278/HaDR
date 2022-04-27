@@ -12,6 +12,10 @@ sim_val_std=[67.9589, 66.7224, 67.0522, 48.3540]
 test_train_mean=[123.675, 116.28, 103.53, 35.3792] 
 test_train_std=[58.395, 57.12, 57.375, 45.978]
 
+def add_packages_paths():
+    import os, sys
+    path = os.path.abspath("./modified_packges")
+    sys.path.insert(0,path)
 
 def get_norm_params(input_channels, mode):
     if mode == "train":
