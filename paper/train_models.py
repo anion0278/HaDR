@@ -78,7 +78,7 @@ if __name__ == "__main__":
     arch_name = "solov2_light_448_r50_fpn"
     # arch_name = "mask_rcnn_r101_fpn"
     # arch_name = "solov2_r101_fpn"
-    channels = 4
+    channels = 1
 
     training_dataset = "sim_train_320x256" 
     validation_dataset = "sim_val_320x256"

@@ -1,7 +1,7 @@
 resolution = (256, 320) # CORRECT sequnce, checked in loading.py 
+channels = 3
 
 import common_settings
-img_norm_cfg = common_settings.get_norm_params(3)
 
 train_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -19,7 +19,7 @@ train_pipeline = [
     dict(type='Corrupt', corruption="saturate", max_severity=3),
     dict(type='Corrupt', corruption="fog", max_severity=4),
     dict(type='Corrupt', corruption="defocus_blur", max_severity=2),
-    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Normalize', **common_settings.get_norm_params(channels, "train")),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),
@@ -32,7 +32,7 @@ test_pipeline = [
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
-            dict(type='Normalize', **img_norm_cfg),
+            dict(type='Normalize', **common_settings.get_norm_params(channels, "test")),
             dict(type='Pad', size_divisor=32), # Pad is required ! since our Real-cam images have shape 240x320 
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
@@ -46,7 +46,7 @@ val_pipeline = [
          multiscale_mode='value',
          keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
-    dict(type='Normalize', **img_norm_cfg),
+    dict(type='Normalize', **common_settings.get_norm_params(channels, "train")),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'], 
