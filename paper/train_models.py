@@ -19,6 +19,8 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 
+
+
 def get_pipelines(in_channels):
     from mmcv import Config
     options = {  
@@ -79,6 +81,8 @@ if __name__ == "__main__":
     # arch_name = "mask_rcnn_r101_fpn"
     # arch_name = "solov2_r101_fpn"
     channels = 1
+    frozen_epochs = 10
+    unfrozen_epochs = 20
 
     training_dataset = "sim_train_320x256" 
     validation_dataset = "sim_val_320x256"
@@ -93,29 +97,29 @@ if __name__ == "__main__":
 
     cfg = get_config(arch_name, channels)
 
-    config_id = experiment_tag + "-" + arch_name + "_%sch" % channels + "-" + training_dataset + "_"+ dataset_size + "-" + timestamp
+    config_id = f"{experiment_tag}-{arch_name}_{channels}ch-{training_dataset}_{dataset_size}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
     print("CURRENT CONFIGURATION ID: " + config_id)
     cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
 
-    cfg.data.train.ann_file = train_dataset_path + "/instances_hands_%s.json" % dataset_size 
-    cfg.data.train.img_prefix = train_dataset_path + "/" + main_channel + "/"
+    cfg.data.train.ann_file =  f"{train_dataset_path}/instances_hands_{dataset_size}.json"
+    cfg.data.train.img_prefix =  f"{train_dataset_path}/{main_channel}/"
     
-    cfg.data.val.ann_file = val_dataset_path + "/instances_hands_%s.json" % dataset_size 
-    cfg.data.val.img_prefix = val_dataset_path + "/" + main_channel + "/"
+    cfg.data.val.ann_file = f"{val_dataset_path}/instances_hands_{dataset_size}.json"
+    cfg.data.val.img_prefix = f"{val_dataset_path}/{main_channel}/"
 
     datasets = get_datasets(cfg)
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
-    cfg.load_from = storage + ":/models/" + arch_name + ".pth"
+    cfg.load_from = f"{storage}:/models/{arch_name}.pth"
     cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = 4
-    cfg.total_epochs = 10
+    cfg.total_epochs = frozen_epochs
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     model.CLASSES = datasets[0].CLASSES # needed for the first time
     train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
-    latest_checkpoint = cfg.work_dir + "/intermediate_" + arch_name +  ".pth"
+    latest_checkpoint = cfg.work_dir + "/intermediate.pth" 
     save_checkpoint(model, latest_checkpoint)
     print("Intermediate training finished")
 
@@ -125,8 +129,8 @@ if __name__ == "__main__":
     cfg.load_from = latest_checkpoint
     cfg.optimizer.lr = 1e-5
     cfg.model.backbone.frozen_stages = -1
-    cfg.total_epochs = 20
+    cfg.total_epochs = unfrozen_epochs
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
     train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
-    save_checkpoint(model, cfg.work_dir + "/final_" + arch_name + ".pth")
+    save_checkpoint(model, cfg.work_dir + "/final.pth")  
     print("Final (full network) training finished!")

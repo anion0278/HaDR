@@ -80,7 +80,7 @@ class Config(object):
     """
 
     @staticmethod
-    def _file2dict(filename, temp_module_name = '_tempconfig'):
+    def _file2dict(filename, temp_module_name):
         filename = osp.abspath(osp.expanduser(filename))
         check_file_exist(filename)
         if filename.endswith('.py'):
@@ -148,7 +148,7 @@ class Config(object):
                 b[k] = v
 
     @staticmethod
-    def fromfile(filename, temp_module_name):
+    def fromfile(filename, temp_module_name="_tempconfig"):
         cfg_dict, cfg_text = Config._file2dict(filename, temp_module_name)
         return Config(cfg_dict, cfg_text=cfg_text, filename=filename)
 
