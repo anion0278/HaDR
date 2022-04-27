@@ -34,7 +34,7 @@ def set_config_params(cfg):
     cfg.gpus = 1
     cfg.dist_params = dict(backend='nccl')
     cfg.resume_from = None
-    cfg.checkpoint_config = dict(create_symlink=False, interval = 1) # TRY TO USE state of optimizer save_optimizer = True
+    cfg.checkpoint_config = dict(create_symlink=False, interval = 4) # TRY TO USE state of optimizer save_optimizer = True
 
     cfg.log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
     cfg.log_level = 'INFO'
