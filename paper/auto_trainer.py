@@ -15,8 +15,8 @@ data_configs = {
     "F": (4, False),
     }
 
-for tag_id, arch in archs.items():
-    for tag_name, config in data_configs.items():
+for tag_name, config in data_configs.items():
+    for tag_id, arch in archs.items():
         channels, is_aug_enabled = config
         command = f"python paper/trainer.py --tag {tag_id + tag_name} --arch {arch} --channels {channels} --aug {is_aug_enabled}"
         print(command)
