@@ -11,10 +11,17 @@ from mmdet.models import build_detector
 from mmdet.apis import train_detector
 import ws_specific_settings as wss
 import model_utils as utils
-import os
+import os, argparse
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
+
+default_experiment_tag = "1C"
+# default_arch_name = "fast_mask_rcnn_r101_fpn"
+default_arch_name = "solov2_light_448_r50_fpn"
+# default_arch_name = "mask_rcnn_r101_fpn"
+# default_arch_name = "solov2_r101_fpn"
+default_channels = 4
 
 def get_datasets(cfg):
     datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
@@ -22,18 +29,41 @@ def get_datasets(cfg):
     datasets[1].CLASSES = datasets[0].CLASSES
     return datasets
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train a detector')
+    parser.add_argument(
+        '--tag',
+        type=str,
+        default=default_experiment_tag,
+        help='tag for the experiment')
+    parser.add_argument(
+        '--arch',
+        type=str,
+        default=default_arch_name,
+        help='architecture config name')
+    parser.add_argument(
+        '--channels', 
+        type=int, 
+        default=default_channels, 
+        help='number of channels')
+    parser.add_argument(
+        '--aug',
+        type=bool,
+        default=True,
+        help='enable/disable augmenatations')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
- 
-    TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
+    args = parse_args()
+    print(args)
+
+
+    TEST = True  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
     storage = wss.storage
-    experiment_tag = "2G"
-    # arch_name = "fast_mask_rcnn_r101_fpn"
-    arch_name = "solov2_light_448_r50_fpn"
-    # arch_name = "mask_rcnn_r101_fpn"
-    # arch_name = "solov2_r101_fpn"
-    channels = 1
-    frozen_epochs = 10
-    unfrozen_epochs = 20
+    
+    frozen_epochs = 1
+    unfrozen_epochs = 1
     training_dataset = "sim_train_320x256" 
     validation_dataset = "sim_val_320x256"
 
@@ -43,12 +73,12 @@ if __name__ == "__main__":
         wss.workers = 2
     train_dataset_path = storage + ":/datasets/" + training_dataset
     val_dataset_path =  storage + ":/datasets/" + validation_dataset
-    main_channel = "depth" if channels == 1 else "color" 
+    main_channel = "depth" if args.channels == 1 else "color" 
     timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
 
-    cfg = utils.get_config(arch_name, channels)
+    cfg = utils.get_config(args.arch, args.channels)
 
-    config_id = f"{experiment_tag}-{arch_name}_{channels}ch-{training_dataset}_{dataset_size}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
+    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
     print("CURRENT CONFIGURATION ID: " + config_id)
     cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
@@ -63,7 +93,7 @@ if __name__ == "__main__":
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
-    cfg.load_from = f"{storage}:/models/{arch_name}.pth"
+    cfg.load_from = f"{storage}:/models/{args.arch}.pth"
     cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = 4
     cfg.total_epochs = frozen_epochs
