@@ -21,6 +21,9 @@ def get_norm_params(input_channels, mode):
     if mode == "train":
         mean = sim_train_std
         std = sim_train_std
+    if mode == "val":
+        mean = sim_val_std
+        std = sim_val_std
     if mode == "test":
         mean = test_train_mean
         std = test_train_std

@@ -46,7 +46,6 @@ val_pipeline = [
          img_scale=[resolution],
          multiscale_mode='value',
          keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.0, direction='horizontal'),
     dict(type='Normalize', **common_settings.get_norm_params(channels, "train")),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),

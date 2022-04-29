@@ -21,9 +21,14 @@ default_experiment_tag = "1C"
 default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "mask_rcnn_r101_fpn"
 # default_arch_name = "solov2_r101_fpn"
+is_aug_enabled = True
 default_channels = 4
 
-def get_datasets(cfg):
+def get_datasets(cfg, is_aug_enabled):
+    if not is_aug_enabled: 
+        # train_norm = cfg.data.train["pipeline"][3]
+        cfg.data.train = cfg.data.val
+        # cfg.data.train["pipeline"][3] = train_norm
     datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
     datasets[0].CLASSES = ["hand"]
     datasets[1].CLASSES = datasets[0].CLASSES
@@ -34,22 +39,26 @@ def parse_args():
     parser.add_argument(
         '--tag',
         type=str,
+        required = False,
         default=default_experiment_tag,
         help='tag for the experiment')
     parser.add_argument(
         '--arch',
         type=str,
+        required = False,
         default=default_arch_name,
         help='architecture config name')
     parser.add_argument(
         '--channels', 
         type=int, 
+        required = False,
         default=default_channels, 
         help='number of channels')
     parser.add_argument(
         '--aug',
         type=bool,
-        default=True,
+        required = False,
+        default=is_aug_enabled,
         help='enable/disable augmenatations')
     return parser.parse_args()
 
@@ -57,8 +66,6 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     print(args)
-
-
     TEST = True  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
     storage = wss.storage
     
@@ -78,7 +85,7 @@ if __name__ == "__main__":
 
     cfg = utils.get_config(args.arch, args.channels)
 
-    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
+    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-Aug{args.aug}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
     print("CURRENT CONFIGURATION ID: " + config_id)
     cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
@@ -89,7 +96,7 @@ if __name__ == "__main__":
     cfg.data.val.ann_file = f"{val_dataset_path}/instances_hands_{dataset_size}.json"
     cfg.data.val.img_prefix = f"{val_dataset_path}/{main_channel}/"
 
-    datasets = get_datasets(cfg)
+    datasets = get_datasets(cfg, args.aug)
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
