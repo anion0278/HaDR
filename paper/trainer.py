@@ -66,11 +66,11 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     print(args)
-    TEST = True  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
+    TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
     storage = wss.storage
     
-    frozen_epochs = 1
-    unfrozen_epochs = 1
+    frozen_epochs = 10
+    unfrozen_epochs = 20
     training_dataset = "sim_train_320x256" 
     validation_dataset = "sim_val_320x256"
 
