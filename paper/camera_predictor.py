@@ -16,25 +16,25 @@ arch_name = "mask_rcnn_r101_fpn"
 tested_model_dir = "maskrcnn-test"
 channels = 4
 
-def get_tested_image(input_channels, img_rbgd):
-    options = { 1: img_rbgd[:,:,3:4], 
-                3: img_rbgd[:,:,0:3],
-                4: img_rbgd }
+def get_tested_image(input_channels, img_bgrd):
+    options = { 1: img_bgrd[:,:,3:4], 
+                3: img_bgrd[:,:,0:3],
+                4: img_bgrd }
     return options[input_channels]
 
-def detect(img_rbgd):
+def detect(img_bgrd):
     start = time.time()
-    tested_image = get_tested_image(cfg.model.backbone.in_channels, img_rbgd)
+    tested_image = get_tested_image(cfg.model.backbone.in_channels, img_bgrd)
     result = predict_image(model, tested_image)
     elapsed_time = time.time() - start
     title = f"Inference time: {elapsed_time:2.2f}s, FPS: {(1/elapsed_time):2.0f}" 
-    depth = img_rbgd[:,:,3:4]
+    color, depth = camera.separate_color_from_depth(img_bgrd)
     depth = np.stack((np.squeeze(depth),)*3, axis=-1)
     ins_visualization = show_result_pyplot if "mask" in arch_name else show_result_ins # mask rcnn requires different visualization
-    res_img_rgb = ins_visualization(img_rbgd[:,:,0:3], result, model.CLASSES, score_thr=0.5)
+    res_img_bgrb = ins_visualization(color, result, model.CLASSES, score_thr=0.5)
     res_img_d = ins_visualization(depth, result, model.CLASSES, score_thr=0.5)
     window_id = "win id"
-    cv2.imshow(window_id, np.hstack([res_img_rgb, res_img_d]))
+    cv2.imshow(window_id, np.hstack([res_img_bgrb, res_img_d]))
     cv2.setWindowTitle(window_id, title)
     cv2.waitKey(1)
     
@@ -48,4 +48,4 @@ if __name__ == "__main__":
     while(True):
         detect(cam.get_rgbd_image())
 
-    pipeline.stop() # TODO 
+    camera.close() # TODO 

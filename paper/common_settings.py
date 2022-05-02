@@ -1,5 +1,7 @@
 path_to_configs = "./paper/tested_configs/%s.py"
 
+# model_input_size = (256, 320) #TODO
+
 # from custom train dataset
 sim_train_mean=[100.618, 99.171, 96.664, 37.286] 
 sim_train_std=[67.012, 66.945, 68.539, 47.192]

@@ -4,6 +4,9 @@ sys.path.insert(0,path)
 import pyrealsense2 as rs
 import numpy as np
 
+def separate_color_from_depth(img_bgrd):
+    return img_bgrd[:,:,0:3], img_bgrd[:,:,3:4] # color, depth
+
 class RgbdCamera():
     def __init__(self, resolution, rate):
         self.pipeline = rs.pipeline()
@@ -61,3 +64,7 @@ class RgbdCamera():
             depth_colorized = depth_colorized[:,:,0:1]
             rgbd_img = np.concatenate([color_image,depth_colorized.astype("uint8")],axis=2)
         return rgbd_img
+
+    def close(self):
+        self.pipeline.stop()
+    
