@@ -14,6 +14,18 @@ sim_val_std=[66.85, 66.183, 67.875, 55.906]
 test_train_mean=[123.675, 116.28, 103.53, 35.3792] 
 test_train_std=[58.395, 57.12, 57.375, 45.978]
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        import argparse 
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def add_packages_paths():
     import os, sys
     path = os.path.abspath("./modified_packges")

@@ -8,7 +8,7 @@ from datetime import datetime as dt
 
 import common_settings as s
 
-dataset_name = "real"
+dataset_name = "real_ws2"
 dataset_path = wss.storage + ":/datasets/" + dataset_name
 
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         window_id = "recorder"
         cv2.imshow(window_id, np.hstack([color, depth_3ch]))
         cv2.setWindowTitle(window_id, "Dataset recorder. [Esc] to quit, [Space] to save image")
-        keyPressed = cv2.waitKey(33)
+        keyPressed = cv2.waitKey(1)
         if keyPressed == 27:    # Esc key to stop
             print("Closing...")
             break
@@ -38,5 +38,4 @@ if __name__ == "__main__":
             cv2.imwrite(f"{dataset_path}/depth/{img_name}", depth)
             print("Saved " + img_name)
 
-        cv2.waitKey(1)
     cam.close()

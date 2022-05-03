@@ -56,7 +56,7 @@ def parse_args():
         help='number of channels')
     parser.add_argument(
         '--aug',
-        type=bool,
+        type=s.str2bool,
         required = False,
         default=is_aug_enabled,
         help='enable/disable augmenatations')
