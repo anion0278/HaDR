@@ -23,22 +23,31 @@ import sys
 
 
 def get_masks(result, num_classes=80):
-    for cur_result in result:
-        masks = [[] for _ in range(num_classes)]
-        if cur_result is None:
-            return masks
-        seg_pred = cur_result[0].cpu().numpy().astype(np.uint8)
-        cate_label = cur_result[1].cpu().numpy().astype(np.int)
-        cate_score = cur_result[2].cpu().numpy().astype(np.float)
-        num_ins = seg_pred.shape[0]
-        for idx in range(num_ins):
-            cur_mask = seg_pred[idx, ...]
-            rle = mask_util.encode(
-                np.array(cur_mask[:, :, np.newaxis], order='F'))[0]
-            rst = (rle, cate_score[idx])
-            masks[cate_label[idx]].append(rst)
+    if (len(result)>1):
+        masks = [[]]
+        for idx in range(len(result[1][0])):
+            rle = result[1][0][idx]
+            rst = (rle, result[0][0][idx][4])
+            masks[0].append(rst)                #hardcocded single category
 
         return masks
+    else:
+        for cur_result in result:
+            masks = [[] for _ in range(num_classes)]
+            if cur_result is None:
+                return masks
+            seg_pred = cur_result[0].cpu().numpy().astype(np.uint8)
+            cate_label = cur_result[1].cpu().numpy().astype(np.int)
+            cate_score = cur_result[2].cpu().numpy().astype(np.float)
+            num_ins = seg_pred.shape[0]
+            for idx in range(num_ins):
+                cur_mask = seg_pred[idx, ...]
+                rle = mask_util.encode(
+                    np.array(cur_mask[:, :, np.newaxis], order='F'))[0]
+                rst = (rle, cate_score[idx])
+                masks[cate_label[idx]].append(rst)
+
+            return masks
 
 
 def single_gpu_test(model, data_loader, show=False, verbose=True):
@@ -174,7 +183,9 @@ def main():
     if args.json_out is not None and args.json_out.endswith('.json'):
         args.json_out = args.json_out[:-5]
 
-    cfg = mmcv.Config.fromfile(args.config)
+    #cfg = mmcv.Config.fromfile(args.config)
+    import model_utils as utils
+    cfg = utils.get_config(args.config, 1)
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -190,7 +201,7 @@ def main():
 
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
-    PREFIX = os.path.abspath('E:/datasets/real_cam_dataset_valid')
+    PREFIX = os.path.abspath('E:/datasets/real_merged_l515_640x480')
     cfg.data.test.ann_file = PREFIX + '/instances_hands_full.json'
     cfg.data.test.img_prefix = PREFIX + "/depth/" if cfg.model.backbone.in_channels == 1 else PREFIX + "/color/"
     cfg.data.test.type =  "CocoDataset"
