@@ -22,6 +22,8 @@ import pycocotools.mask as mask_util
 import sys
 import ws_specific_settings as wss
 
+import warnings
+warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 eval_dataset = wss.storage + ':/datasets/real_merged_l515_640x480'
 eval_dataset_config = '/instances_hands_full.json'
@@ -149,7 +151,7 @@ def collect_results(result_part, size, tmpdir=None):
 def parse_args():
     parser = argparse.ArgumentParser(description='MMDet test detector')
     # parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint_path', help='checkpoint path')
+    parser.add_argument('--checkpoint_path', help='checkpoint path')
     parser.add_argument('--out', help='output result file')
     parser.add_argument(
         '--json_out',
@@ -215,12 +217,12 @@ def main():
     cfg.data.test.type =  "CocoDataset"
 
     dataset = build_dataset(cfg.data.test)
-    # dataset.CLASSES = ["hand"] # TODO solve
+    dataset.CLASSES = ["hand"] # TODO solve
 
     data_loader = build_dataloader(
         dataset,
         imgs_per_gpu=1,
-        workers_per_gpu=cfg.data.workers_per_gpu,
+        workers_per_gpu=2,
         dist=distributed,
         shuffle=False)
 
@@ -243,8 +245,8 @@ def main():
     else:
         model.CLASSES = dataset.CLASSES
 
-    assert len(model.CLASSES) == 1 # just additional check
-    data_loader.dataset.CLASSES = model.CLASSES
+    #assert len(model.CLASSES) == 1 # just additional check
+    #data_loader.dataset.CLASSES = model.CLASSES
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
