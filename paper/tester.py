@@ -20,6 +20,12 @@ import time
 import numpy as np
 import pycocotools.mask as mask_util
 import sys
+import ws_specific_settings as wss
+
+
+eval_dataset = wss.storage + ':/datasets/real_merged_l515_640x480'
+eval_dataset_config = '/instances_hands_full.json'
+checkpoint_file_name = "final.pth"
 
 
 def get_masks(result, num_classes=80):
@@ -142,8 +148,8 @@ def collect_results(result_part, size, tmpdir=None):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='MMDet test detector')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    # parser.add_argument('config', help='test config file path')
+    parser.add_argument('checkpoint_path', help='checkpoint path')
     parser.add_argument('--out', help='output result file')
     parser.add_argument(
         '--json_out',
@@ -183,10 +189,14 @@ def main():
     if args.json_out is not None and args.json_out.endswith('.json'):
         args.json_out = args.json_out[:-5]
 
-    #cfg = mmcv.Config.fromfile(args.config)
+    import re, os
+    matches = re.search(r"^\d[A-Z]-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(args.checkpoint_path))
     import model_utils as utils
-    cfg = utils.get_config(args.config, 1)
-    # set cudnn_benchmark
+    cfg = utils.get_config(
+        matches.group('arch'), 
+        int(matches.group('channels'))
+        )
+
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
     cfg.model.pretrained = None
@@ -199,15 +209,12 @@ def main():
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
 
-    # build the dataloader
-    # TODO: support multiple images per gpu (only minor changes are needed)
-    PREFIX = os.path.abspath('E:/datasets/real_merged_l515_640x480')
-    cfg.data.test.ann_file = PREFIX + '/instances_hands_full.json'
+    PREFIX = os.path.abspath(eval_dataset)
+    cfg.data.test.ann_file = PREFIX + eval_dataset_config
     cfg.data.test.img_prefix = PREFIX + "/depth/" if cfg.model.backbone.in_channels == 1 else PREFIX + "/color/"
     cfg.data.test.type =  "CocoDataset"
 
     dataset = build_dataset(cfg.data.test)
-    dataset.CLASSES = ["hand"] # !!!!!!!!!!!!!!!!!!!!
 
     data_loader = build_dataloader(
         dataset,
@@ -222,13 +229,14 @@ def main():
     if fp16_cfg is not None:
         wrap_fp16_model(model)
 
+    args.checkpoint = args.checkpoint_path + "/" + checkpoint_file_name
+
     while not osp.isfile(args.checkpoint):
         print('Waiting for {} to exist...'.format(args.checkpoint))
         time.sleep(60)
 
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
-    # old versions did not save class info in checkpoints, this walkaround is
-    # for backward compatibility
+    # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
     if 'CLASSES' in checkpoint['meta']:
         model.CLASSES = checkpoint['meta']['CLASSES']
     else:
