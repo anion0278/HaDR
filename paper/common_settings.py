@@ -1,5 +1,7 @@
 path_to_configs = "./paper/tested_configs/%s.py"
 
+# model_input_size = (256, 320) #TODO
+
 # from custom train dataset
 sim_train_mean=[100.618, 99.171, 96.664, 37.286] 
 sim_train_std=[67.012, 66.945, 68.539, 47.192]
@@ -11,6 +13,18 @@ sim_val_std=[66.85, 66.183, 67.875, 55.906]
 # from coco
 test_train_mean=[123.675, 116.28, 103.53, 35.3792] 
 test_train_std=[58.395, 57.12, 57.375, 45.978]
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        import argparse 
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 def add_packages_paths():
     import os, sys

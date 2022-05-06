@@ -21,18 +21,22 @@ default_experiment_tag = "1C"
 default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "mask_rcnn_r101_fpn"
 # default_arch_name = "solov2_r101_fpn"
-is_aug_enabled = True
+is_aug_enabled = False
 default_channels = 4
 
-def get_datasets(cfg, is_aug_enabled):
-    if not is_aug_enabled: 
-        # train_norm = cfg.data.train["pipeline"][3]
-        cfg.data.train = cfg.data.val
-        # cfg.data.train["pipeline"][3] = train_norm
+def get_datasets(cfg):
     datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
     datasets[0].CLASSES = ["hand"]
     datasets[1].CLASSES = datasets[0].CLASSES
     return datasets
+
+def manage_aug(cfg, is_aug_enabled):
+    if not is_aug_enabled: 
+        import copy
+        # train_norm = cfg.data.train["pipeline"][3]
+        cfg.data.train = copy.deepcopy(cfg.data.val)
+        # cfg.data.train["pipeline"][3] = train_norm
+    return cfg
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a detector')
@@ -56,7 +60,7 @@ def parse_args():
         help='number of channels')
     parser.add_argument(
         '--aug',
-        type=bool,
+        type=s.str2bool,
         required = False,
         default=is_aug_enabled,
         help='enable/disable augmenatations')
@@ -90,13 +94,12 @@ if __name__ == "__main__":
     cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
 
+    cgf = manage_aug(cfg, args.aug)
     cfg.data.train.ann_file =  f"{train_dataset_path}/instances_hands_{dataset_size}.json"
     cfg.data.train.img_prefix =  f"{train_dataset_path}/{main_channel}/"
-    
     cfg.data.val.ann_file = f"{val_dataset_path}/instances_hands_{dataset_size}.json"
     cfg.data.val.img_prefix = f"{val_dataset_path}/{main_channel}/"
-
-    datasets = get_datasets(cfg, args.aug)
+    datasets = get_datasets(cfg)
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
