@@ -2,10 +2,13 @@ import os
 import ws_specific_settings as wss
 import re
 
-MODEL_DIR = os.path.abspath(wss.storage+":/models/")
+MODELS_DIR = os.path.abspath(wss.storage+":/models/")
+MODEL_NAME = "final.pth"
 
-for filename in os.listdir(MODEL_DIR):
-    if (re.search("^\d[A-Z]-",filename)):
-        command = f"python paper/tester.py --checkpoint_path " + os.path.join(MODEL_DIR,filename)
-        print(command)
-        os.system(command)
+for model_dir in os.listdir(MODELS_DIR):
+    if (re.search("^\d[A-Z]-",model_dir)):
+        dirname = os.path.join(MODELS_DIR,model_dir)
+        if (os.path.exists(os.path.join(dirname,MODEL_NAME))):
+            command = f"python paper/tester.py --checkpoint_path " + dirname
+            print(command)
+            os.system(command)
