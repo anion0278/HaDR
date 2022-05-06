@@ -215,6 +215,7 @@ def main():
     cfg.data.test.type =  "CocoDataset"
 
     dataset = build_dataset(cfg.data.test)
+    # dataset.CLASSES = ["hand"] # TODO solve
 
     data_loader = build_dataloader(
         dataset,
@@ -241,6 +242,9 @@ def main():
         model.CLASSES = checkpoint['meta']['CLASSES']
     else:
         model.CLASSES = dataset.CLASSES
+
+    assert len(model.CLASSES) == 1 # just additional check
+    data_loader.dataset.CLASSES = model.CLASSES
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
