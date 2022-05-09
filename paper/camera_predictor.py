@@ -9,12 +9,9 @@ import common_settings as s
 s.add_packages_paths()
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
-# arch_name = "fast_mask_rcnn_r101_fpn"
-# arch_name = "solov2_light_448_r50_fpn"
-arch_name = "mask_rcnn_r101_fpn"
-# arch_name = "solov2_r101_fpn"
-tested_model_dir = "maskrcnn-test"
-channels = 4
+
+checkpoint_dir = "2G-solov2_light_448_r50_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep"
+
 
 def get_tested_image(input_channels, img_bgrd):
     options = { 1: img_bgrd[:,:,3:4], 
@@ -22,7 +19,7 @@ def get_tested_image(input_channels, img_bgrd):
                 4: img_bgrd }
     return options[input_channels]
 
-def detect(img_bgrd):
+def detect(img_bgrd, arch):
     start = time.time()
     tested_image = get_tested_image(cfg.model.backbone.in_channels, img_bgrd)
     result = predict_image(model, tested_image)
@@ -30,7 +27,7 @@ def detect(img_bgrd):
     title = f"Inference time: {elapsed_time:2.2f}s, FPS: {(1/elapsed_time):2.0f}" 
     color, depth = camera.separate_color_from_depth(img_bgrd)
     depth = np.stack((np.squeeze(depth),)*3, axis=-1)
-    ins_visualization = show_result_pyplot if "mask" in arch_name else show_result_ins # mask rcnn requires different visualization
+    ins_visualization = show_result_pyplot if "mask" in arch else show_result_ins # mask rcnn requires different visualization
     res_img_bgrb = ins_visualization(color, result, model.CLASSES, score_thr=0.5)
     res_img_d = ins_visualization(depth, result, model.CLASSES, score_thr=0.5)
     window_id = "win id"
@@ -40,12 +37,13 @@ def detect(img_bgrd):
     
 
 if __name__ == "__main__":
-    config_file = f'../SOLO/paper/tested_configs/{arch_name}.py' 
-    cfg = utils.get_config(arch_name, channels)
-    checkpoint_file = wss.storage + ":/models/" + tested_model_dir +"/final.pth" 
-    model = init_detector(cfg, checkpoint_file, device='cuda:0')
+    checkpoint_path = wss.storage + ":/models/" + checkpoint_dir 
+    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(checkpoint_path)
+    cfg = utils.get_config(arch, channels)
+    
+    model = init_detector(cfg, checkpoint_path + "/" + s.tested_checkpoint_file_name, device='cuda:0')
     cam = camera.RgbdCamera((640,480), 30)
     while(True):
-        detect(cam.get_rgbd_image())
+        detect(cam.get_rgbd_image(), arch)
 
     camera.close() # TODO 

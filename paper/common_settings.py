@@ -1,5 +1,7 @@
 path_to_configs = "./paper/tested_configs/%s.py"
 
+tested_checkpoint_file_name = "final.pth"
+
 # model_input_size = (256, 320) #TODO
 
 # from custom train dataset

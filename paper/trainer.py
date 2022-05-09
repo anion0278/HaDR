@@ -84,7 +84,7 @@ if __name__ == "__main__":
         wss.workers = 2
     train_dataset_path = storage + ":/datasets/" + training_dataset
     val_dataset_path =  storage + ":/datasets/" + validation_dataset
-    main_channel = "depth" if args.channels == 1 else "color" 
+    main_channel =  utils.get_main_channel_name(args.channels)
     timestamp = dt.now().strftime("%a_D%d_M%m_%Hh_%Mm") 
 
     cfg = utils.get_config(args.arch, args.channels)

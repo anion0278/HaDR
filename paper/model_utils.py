@@ -20,6 +20,14 @@ def get_config(arch_name, channels):
     set_config_params(cfg)
     return cfg
 
+def parse_config_and_channels_from_checkpoint_path(checkpoint_path):
+    import re, os
+    matches = re.search(r"^\d[A-Z]-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
+    return matches.group('arch'), int(matches.group('channels'))
+
+def get_main_channel_name(channels):
+    return "depth" if  channels == 1 else "color"
+
 def set_config_params(cfg):
     cfg.data.imgs_per_gpu = 4
     cfg.data.workers_per_gpu = wss.workers
