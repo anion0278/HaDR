@@ -27,13 +27,9 @@ import common_settings as s
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-TEST = False
-
-
+TEST = True
 eval_dataset = wss.storage + ':/datasets/real_merged_l515_640x480'
-eval_dataset_config = '/instances_hands_full.json'
-
-if TEST: eval_dataset_config = '/instances_hands_5.json'
+eval_dataset_config = '/instances_hands_6.json' if TEST else '/instances_hands_full.json' 
 
 def get_masks(result, num_classes=80):
     if (len(result)>1):
@@ -42,7 +38,6 @@ def get_masks(result, num_classes=80):
             rle = result[1][0][idx]
             rst = (rle, result[0][0][idx][4])
             masks[0].append(rst)                #hardcocded single category
-
         return masks
     else:
         for cur_result in result:
@@ -59,7 +54,6 @@ def get_masks(result, num_classes=80):
                     np.array(cur_mask[:, :, np.newaxis], order='F'))[0]
                 rst = (rle, cate_score[idx])
                 masks[cate_label[idx]].append(rst)
-
             return masks
 
 
