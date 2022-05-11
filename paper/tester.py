@@ -27,9 +27,9 @@ import common_settings as s
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-TEST = True
+TEST = False
 eval_dataset = wss.storage + ':/datasets/real_merged_l515_640x480'
-eval_dataset_config = '/instances_hands_6.json' if TEST else '/instances_hands_full.json' 
+eval_dataset_annotations = '/instances_hands_6.json' if TEST else '/instances_hands_full.json' 
 
 def get_masks(result, num_classes=80):
     if (len(result)>1):
@@ -49,11 +49,13 @@ def get_masks(result, num_classes=80):
             cate_score = cur_result[2].cpu().numpy().astype(np.float)
             num_ins = seg_pred.shape[0]
             for idx in range(num_ins):
+                class_label_id = cate_label[idx]
+                if class_label_id >= num_classes: continue
                 cur_mask = seg_pred[idx, ...]
                 rle = mask_util.encode(
                     np.array(cur_mask[:, :, np.newaxis], order='F'))[0]
                 rst = (rle, cate_score[idx])
-                masks[cate_label[idx]].append(rst)
+                masks[class_label_id].append(rst)
             return masks
 
 
@@ -205,12 +207,13 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     PREFIX = os.path.abspath(eval_dataset)
-    cfg.data.test.ann_file = PREFIX + eval_dataset_config
+    if cfg.model.bbox_head.num_classes == 81: annotations = eval_dataset_annotations.replace("hands", "arms") # evaluating pretrained COCO model on ARMS datasets, because it has only "Person" class
+    cfg.data.test.ann_file = PREFIX + annotations
     cfg.data.test.img_prefix = f"{PREFIX}/{utils.get_main_channel_name(cfg.model.backbone.in_channels)}/"
     cfg.data.test.type =  "CocoDataset"
 
     dataset = build_dataset(cfg.data.test)
-    #dataset.CLASSES = ["hand"] # TODO solve
+    dataset.CLASSES = ["hand"] # for hands tests
 
     data_loader = build_dataloader(
         dataset,
@@ -238,9 +241,6 @@ def main():
     else:
         model.CLASSES = dataset.CLASSES
 
-    #assert len(model.CLASSES) == 1 # just additional check
-    #data_loader.dataset.CLASSES = model.CLASSES
-
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
         outputs = single_gpu_test(model, data_loader)
@@ -259,7 +259,7 @@ def main():
                 result_file = args.out
                 coco_eval(result_file, eval_types, dataset.coco)
             else:
-                if not isinstance(outputs[0], dict):
+                if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json_segm(dataset, outputs, args.out)
                     coco_eval(result_files, eval_types, dataset.coco)
                 else:

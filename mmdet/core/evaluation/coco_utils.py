@@ -203,7 +203,7 @@ def segm2json_segm(dataset, results):
     for idx in range(len(dataset)):
         img_id = dataset.img_ids[idx]
         seg = results[idx]
-        for label in range(len(seg)):
+        for label in range(len(dataset.CLASSES)):
             masks = seg[label]
             for i in range(len(masks)):
                 mask_score = masks[i][1]
@@ -211,9 +211,9 @@ def segm2json_segm(dataset, results):
                 data = dict()
                 data['image_id'] = img_id
                 data['score'] = float(mask_score)
-                data['category_id'] = dataset.cat_ids[label]
                 segm['counts'] = segm['counts'].decode()
                 data['segmentation'] = segm
+                data['category_id'] = dataset.cat_ids[label]
                 segm_json_results.append(data)
     return segm_json_results
 

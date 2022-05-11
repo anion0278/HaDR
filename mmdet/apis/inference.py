@@ -306,22 +306,22 @@ def show_result_ins(img,
         cate_score = cate_score[orders]
 
     np.random.seed(42)
-    color_masks = [
+    mask_colors = [
         np.random.randint(0, 256, (1, 3), dtype=np.uint8)
         for _ in range(num_mask)
     ]
     for idx in range(num_mask):
         idx = -(idx+1)
+        cur_cate = cate_label[idx]
+        if (cur_cate >= len(class_names)): continue # for hands-tests only. Used with pretrained models, when the classes are overriden
         cur_mask = seg_label[idx, :, :]
         cur_mask = mmcv.imresize(cur_mask, (w, h))
         cur_mask = (cur_mask > 0.5).astype(np.uint8)
         if cur_mask.sum() == 0:
             continue
-        color_mask = color_masks[idx]
+        mask_color = mask_colors[idx]
         cur_mask_bool = cur_mask.astype(np.bool)
-        img_show[cur_mask_bool] = img[cur_mask_bool] * 0.5 + color_mask * 0.5
-
-        cur_cate = cate_label[idx]
+        img_show[cur_mask_bool] = img[cur_mask_bool] * 0.5 + mask_color * 0.5
         cur_score = cate_score[idx]
         label_text = class_names[cur_cate]
         label_text += '|{:.02f}'.format(cur_score)

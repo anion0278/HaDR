@@ -10,7 +10,8 @@ s.add_packages_paths()
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
 
-checkpoint_dir = "2G-solov2_light_448_r50_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep"
+# checkpoint_dir = "2G-solov2_light_448_r50_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep"
+checkpoint_dir = "2G-solov2_light_448_r50_fpn_coco_3ch-sim_train_320x256_full-AugTrue-10+20epPRETRAINED"
 
 
 def get_tested_image(input_channels, img_bgrd):
@@ -40,8 +41,11 @@ if __name__ == "__main__":
     checkpoint_path = wss.storage + ":/models/" + checkpoint_dir 
     arch, channels = utils.parse_config_and_channels_from_checkpoint_path(checkpoint_path)
     cfg = utils.get_config(arch, channels)
-    
     model = init_detector(cfg, checkpoint_path + "/" + s.tested_checkpoint_file_name, device='cuda:0')
+    if len(model.CLASSES) > 1: 
+        print(f"Overrinding the model classes! Current classes: {model.CLASSES}")
+        model.CLASSES = ["person"] if cfg.model.bbox_head.num_classes == 81 else ["hand"]
+            
     cam = camera.RgbdCamera((640,480), 30)
     while(True):
         detect(cam.get_rgbd_image(), arch)
