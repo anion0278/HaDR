@@ -480,10 +480,7 @@ def contrast(x, severity=1):
 
 
 def brightness(x, severity=1):
-    c = [.1, .2, .3, .4, .5][severity - 1]
-
-    if np.random.rand() < 0.5: # added probability of decreasing brightness
-        c *= -1
+    c = [-0.3, -0.2, 0.1, 0.2, 0.4][severity - 1]
 
     x = np.array(x) / 255.
 
