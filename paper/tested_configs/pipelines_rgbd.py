@@ -15,7 +15,7 @@ train_pipeline = [
     dict(type='DecimateDepth', probability=0.5),
     dict(type='CorruptRgbd', corruption="motion_blur", max_severity=3, channels="color"),
     dict(type='CorruptRgbd', corruption="brightness", max_severity=5, channels="random"),
-    dict(type='CorruptRgbd', corruption="saturate", max_severity=5, channels="random"),
+    dict(type='CorruptRgbd', corruption="saturate", max_severity=5, channels="color"),
     dict(type='ConvertRgbdToBgrd'), 
     dict(type='Normalize', **common_settings.get_norm_params(channels, "train")),
     dict(type='Pad', size_divisor=32),
