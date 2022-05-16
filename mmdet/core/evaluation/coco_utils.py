@@ -1,3 +1,4 @@
+from genericpath import exists
 import itertools
 
 import mmcv
@@ -5,6 +6,7 @@ import numpy as np
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from terminaltables import AsciiTable
+import os
 
 from .recall import eval_recalls
 
@@ -13,7 +15,8 @@ def coco_eval(result_files,
               result_types,
               coco,
               max_dets=(100, 300, 1000),
-              classwise=False):
+              classwise=False,
+              file = None):
     for res_type in result_types:
         assert res_type in [
             'proposal', 'proposal_fast', 'bbox', 'segm', 'keypoints'
@@ -41,7 +44,7 @@ def coco_eval(result_files,
         coco_dets = coco.loadRes(result_file)
         img_ids = coco.getImgIds()
         iou_type = 'bbox' if res_type == 'proposal' else res_type
-        cocoEval = COCOeval(coco, coco_dets, iou_type)
+        cocoEval = COCOeval(coco, coco_dets, iou_type, file = file)
         cocoEval.params.imgIds = img_ids
         if res_type == 'proposal':
             cocoEval.params.useCats = 0
@@ -79,6 +82,8 @@ def coco_eval(result_files,
             table_data += [result for result in results_2d]
             table = AsciiTable(table_data)
             print(table.table)
+            
+
 
 
 def fast_eval_recall(results,

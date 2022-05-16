@@ -29,7 +29,8 @@ warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
 eval_dataset = wss.storage + ':/datasets/real_merged_l515_640x480'
-eval_dataset_annotations = '/instances_hands_6.json' if TEST else '/instances_hands_full.json' 
+eval_dataset_annotations = '/instances_hands_6.json' if TEST else '/instances_hands_full.json'
+
 
 def get_masks(result, num_classes=80):
     if (len(result)>1):
@@ -262,7 +263,14 @@ def main():
             else:
                 if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json_segm(dataset, outputs, args.out)
-                    coco_eval(result_files, eval_types, dataset.coco)
+                    eval_dest = wss.storage + ':/models/evals.txt'
+                    if not (os.path.exists(eval_dest)):
+                        f =  open(eval_dest,"w")
+                    else:
+                        f = open(eval_dest,"a")
+                    f.write(args.checkpoint_path + '\n')
+                    coco_eval(result_files, eval_types, dataset.coco,file = f)
+                    f.close()
                 else:
                     for name in outputs[0]:
                         print('\nEvaluating {}'.format(name))
