@@ -29,7 +29,7 @@ def get_main_channel_name(channels):
     return "depth" if  channels == 1 else "color"
 
 def set_config_params(cfg):
-    cfg.data.imgs_per_gpu = 4
+    cfg.data.imgs_per_gpu = 32
     cfg.data.workers_per_gpu = wss.workers
     cfg.data.train.type = "CocoDataset"
     cfg.data.val.type = "CocoDataset"
@@ -37,9 +37,9 @@ def set_config_params(cfg):
     set_random_seed(0, deterministic=True)
     cfg.workflow = [("train", 1), ("val", 1)] 
 
-    cfg.device_ids = range(1)
-    cfg.gpu_ids = range(1)
-    cfg.gpus = 1
+    cfg.device_ids = range(wss.gpus)
+    cfg.gpu_ids = range(wss.gpus)
+    cfg.gpus = wss.gpus
     cfg.dist_params = dict(backend='nccl')
     cfg.resume_from = None
     cfg.checkpoint_config = dict(create_symlink=False, interval = 4) # TRY TO USE state of optimizer save_optimizer = True
