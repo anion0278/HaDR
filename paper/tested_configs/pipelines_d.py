@@ -13,6 +13,7 @@ train_pipeline = [
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
     dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
     dict(type='DecimateDepth', probability=0.5),
+    dict(type='Corrupt', corruption="gaussian_blur", max_severity=2),
     dict(type='Corrupt', corruption="brightness", max_severity=5),
     dict(type='Normalize', **common_settings.get_norm_params(channels, "train")),
     dict(type='Pad', size_divisor=32),
