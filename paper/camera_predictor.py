@@ -11,13 +11,13 @@ from mmdet.apis import init_detector, show_result_ins, predict_image, show_resul
 
 
 # checkpoint_dir = "2G-solov2_light_448_r50_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep"
-checkpoint_dir = "2G-solov2_light_448_r50_fpn_coco_3ch-sim_train_320x256_full-AugTrue-10+20epPRETRAINED"
+checkpoint_dir = "2B-solov2_r101_fpn_3ch-sim_train_320x256_full-AugTrue-10+20ep-Tue_D03_M05_03h_21m"
 
 
 def get_tested_image(input_channels, img_bgrd):
-    options = { 1: img_bgrd[:,:,3:4], 
-                3: img_bgrd[:,:,0:3],
-                4: img_bgrd }
+    options = { 1: img_bgrd[:,:,3:4],  # depth only
+                3: img_bgrd[:,:,0:3],  # color only
+                4: img_bgrd }   #bgrd
     return options[input_channels]
 
 def detect(img_bgrd, arch):
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     if len(model.CLASSES) > 1: 
         print(f"Overrinding the model classes! Current classes: {model.CLASSES}")
         model.CLASSES = ["person"] if cfg.model.bbox_head.num_classes == 81 else ["hand"]
-            
+    
     cam = camera.RgbdCamera((640,480), 30)
     while(True):
         detect(cam.get_rgbd_image(), arch)
