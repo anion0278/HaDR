@@ -14,7 +14,7 @@ from .base import LoggerHook
 @HOOKS.register_module
 class TextLoggerHook(LoggerHook):
 
-    def __init__(self, interval=10, ignore_last=True, reset_flag=True):
+    def __init__(self, interval=1, ignore_last=True, reset_flag=True):
         super(TextLoggerHook, self).__init__(interval, ignore_last, reset_flag)
         self.time_sec_tot = 0
 
