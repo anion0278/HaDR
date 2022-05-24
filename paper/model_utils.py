@@ -17,19 +17,19 @@ def get_config(arch_name, channels):
     cfg = Config.fromfile(s.path_to_configs % arch_name, 'temp')
     cfg.model.backbone.in_channels = channels
     cfg.data = get_pipelines(cfg.model.backbone.in_channels)
-    set_config_params(cfg)
+    __set_config_params(cfg)
     return cfg
 
 def parse_config_and_channels_from_checkpoint_path(checkpoint_path):
     import re, os
-    matches = re.search(r"^\d[A-Z]+-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
+    matches = re.search(r"^\d[A-Za-z]+-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
     return matches.group('arch'), int(matches.group('channels'))
 
 def get_main_channel_name(channels):
     return "depth" if  channels == 1 else "color"
 
-def set_config_params(cfg):
-    cfg.data.imgs_per_gpu = 8
+def __set_config_params(cfg):
+    cfg.data.imgs_per_gpu = 32
     cfg.data.workers_per_gpu = wss.workers
     cfg.data.train.type = "CocoDataset"
     cfg.data.val.type = "CocoDataset"
