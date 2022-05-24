@@ -12,7 +12,7 @@ from mmdet.apis import init_detector, show_result_ins, predict_image, show_resul
 
 # checkpoint_dir = "2G-solov2_light_448_r50_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep"
 checkpoint_dir = "2B-solov2_r101_fpn_3ch-sim_train_320x256_full-AugTrue-10+20ep-Tue_D03_M05_03h_21m"
-
+threshold = 0.5
 
 def get_tested_image(input_channels, img_bgrd):
     options = { 1: img_bgrd[:,:,3:4],  # depth only
@@ -29,8 +29,8 @@ def detect(img_bgrd, arch):
     color, depth = camera.separate_color_from_depth(img_bgrd)
     depth = np.stack((np.squeeze(depth),)*3, axis=-1)
     ins_visualization = show_result_pyplot if "mask" in arch else show_result_ins # mask rcnn requires different visualization
-    res_img_bgrb = ins_visualization(color, result, model.CLASSES, score_thr=0.5)
-    res_img_d = ins_visualization(depth, result, model.CLASSES, score_thr=0.5)
+    res_img_bgrb = ins_visualization(color, result, model.CLASSES, score_thr=threshold)
+    res_img_d = ins_visualization(depth, result, model.CLASSES, score_thr=threshold)
     window_id = "win id"
     cv2.imshow(window_id, np.hstack([res_img_bgrb, res_img_d]))
     cv2.setWindowTitle(window_id, title)
