@@ -22,14 +22,14 @@ def get_config(arch_name, channels):
 
 def parse_config_and_channels_from_checkpoint_path(checkpoint_path):
     import re, os
-    matches = re.search(r"^\d[A-Z]-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
+    matches = re.search(r"^\d[A-Z]+-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
     return matches.group('arch'), int(matches.group('channels'))
 
 def get_main_channel_name(channels):
     return "depth" if  channels == 1 else "color"
 
 def set_config_params(cfg):
-    cfg.data.imgs_per_gpu = 32
+    cfg.data.imgs_per_gpu = 8
     cfg.data.workers_per_gpu = wss.workers
     cfg.data.train.type = "CocoDataset"
     cfg.data.val.type = "CocoDataset"
@@ -46,7 +46,6 @@ def set_config_params(cfg):
 
     cfg.log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
     cfg.log_level = 'INFO'
-    cfg.log_config.interval = 1
 
     if "pretrained" in cfg.model: cfg.model.pop("pretrained") # get rid of pretrained backbone since we will init weights from checkpoint
     cfg.lr_config = dict(policy="poly", power=0.9, min_lr=1e-7, by_epoch=False) # if by_epoch = False, then changes according to iteration
