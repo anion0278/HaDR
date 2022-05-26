@@ -8,7 +8,7 @@ logs_path = wss.storage + ":/models"
 def start_and_open():
     print("Starting tensorboard...")
     webbrowser.open_new("http://localhost:6006/#scalars")
-    os.system('python -m tensorboard.main --logdir='+ logs_path)
+    os.system('python -m tensorboard.main --max_reload_threads 4 --logdir='+ logs_path)
 
 if __name__ == "__main__":
     start_and_open()
