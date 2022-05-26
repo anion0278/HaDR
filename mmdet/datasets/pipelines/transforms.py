@@ -741,7 +741,7 @@ class CorruptRgbd(object):
         if np.random.rand() < self.probability: # !!!
             actual_severity = rn.randint(1, self.severity)
             
-            if self.channels == "random": self.channels = random.choise(["all","color","depth"])
+            if self.channels == "random": self.channels = np.random.choice(["all","color","depth"])
 
             if self.channels in ["all", "color"]: # IT IS NOT POSSIBLE TO Process all channels with the same preset !! the processing of RGB and D is random each time
                 img_rgb = corrupt(

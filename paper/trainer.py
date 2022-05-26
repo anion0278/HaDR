@@ -23,6 +23,7 @@ default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "solov2_r101_fpn"
 is_aug_enabled = False
 default_channels = 4
+TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
 
 def get_datasets(cfg):
     datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
@@ -70,7 +71,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     print(args)
-    TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
+    
     storage = wss.storage
     
     frozen_epochs = 10
@@ -89,7 +90,7 @@ if __name__ == "__main__":
 
     cfg = utils.get_config(args.arch, args.channels)
 
-    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-Aug{args.aug}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
+    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-Aug{args.aug}-BS{cfg.data.imgs_per_gpu}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
     print("CURRENT CONFIGURATION ID: " + config_id)
     cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
