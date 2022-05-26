@@ -698,6 +698,29 @@ class MinIoURandomCrop(object):
 
 
 @PIPELINES.register_module
+class DropImgComponent(object):
+    """Replaces Color or Depth channel with uniform noise"""
+    def __init__(self, probability = 0.2): 
+        self.probability = probability
+
+    def __call__(self, results):
+        if np.random.rand() > self.probability: 
+            img_rgb = results['img'][:,:,0:3]
+            img_d = results['img'][:,:,-1]
+            if np.random.choice([True, False]): # Color or Depth
+                img_rgb = np.random.uniform(low=0, high=255, size=img_rgb.shape).astype("uint8")
+            else:
+                img_d = np.random.uniform(low=0, high=255, size=img_d.shape).astype("uint8")
+            img_d = img_d[..., np.newaxis]
+            results['img'] = np.concatenate([img_rgb, img_d], axis=2)
+        return results
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += '(Dropping color or depth component with {0} probability!)'.format(self.probability)
+        return repr_str
+
+@PIPELINES.register_module
 class DecimateDepth(object):
     def __init__(self, decimator = 10.0, probability = 0.5): 
         self.probability = probability
@@ -720,8 +743,7 @@ class DecimateDepth(object):
 
     def __repr__(self):
         repr_str = self.__class__.__name__
-        repr_str += '(decimation!)'.format(
-            self.corruption, self.severity)
+        repr_str += '(Decimation of depth component by {0})'.format(self.decimator)
         return repr_str
 
 @PIPELINES.register_module

@@ -13,6 +13,7 @@ train_pipeline = [
     dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
     dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
     dict(type='DecimateDepth', probability=0.5),
+    dict(type='DropImgComponent', probability=0.15),
     dict(type='CorruptRgbd', corruption="motion_blur", max_severity=3, channels="color"),
     dict(type='CorruptRgbd', corruption="gaussian_blur", max_severity=2, channels="depth"),
     dict(type='CorruptRgbd', corruption="brightness", max_severity=5, channels="random"),
