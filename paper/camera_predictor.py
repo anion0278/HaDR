@@ -1,6 +1,6 @@
 import time
 import numpy as np
-import cv2
+import cv2, os
 import ws_specific_settings as wss
 import model_utils as utils
 import camera
@@ -9,7 +9,7 @@ import common_settings as s
 s.add_packages_paths()
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
-checkpoint_dir = wss.tested_model
+default_checkpoint_dir = wss.tested_model
 threshold = s.visualization_threshold
 
 def get_tested_image(input_channels, img_bgrd):
@@ -36,12 +36,12 @@ def detect(img_bgrd, arch):
     
 
 if __name__ == "__main__":
-    checkpoint_path = s.path_to_models + checkpoint_dir 
-    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(checkpoint_path)
+    checkpoint_path_full = utils.ask_user_for_checkpoint(s.path_to_models + default_checkpoint_dir)
+    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
     cfg = utils.get_config(arch, channels)
-    model = init_detector(cfg, checkpoint_path + "/" + s.tested_checkpoint_file_name, device='cuda:0')
+    model = init_detector(cfg, checkpoint_path_full, device='cuda:0')
     if len(model.CLASSES) > 1: 
-        print(f"Overrinding the model classes! Current classes: {model.CLASSES}")
+        print(f"Overrinding the model classes! Current classes: {len(model.CLASSES)}")
         model.CLASSES = ["person"] if cfg.model.bbox_head.num_classes == 81 else ["hand"]
     
     cam = camera.RgbdCamera((640,480), 30)
