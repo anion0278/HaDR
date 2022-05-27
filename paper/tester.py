@@ -30,10 +30,9 @@ TEST = False
 default_checkpoint = wss.tested_model
 default_path = s.path_to_models
 
-eval_dataset = s.path_to_datasets + wss.tested_dataset
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
-    eval_dataset_annotations = "/instances_hands_6.json" 
+    eval_dataset_annotations = "/instances_hands_100.json" 
     wss.workers = 1
 
 def parse_args():
@@ -192,6 +191,8 @@ def main():
 
     if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
+
+    eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
 
     if len(args.checkpoint_path) == 2:
         checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])

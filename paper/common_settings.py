@@ -1,3 +1,5 @@
+from tkinter import*
+import os
 import ws_specific_settings as wss
 
 path_to_datasets= wss.storage + ":/datasets/"
@@ -55,3 +57,30 @@ def get_norm_params(input_channels, mode):
     }
     return options[input_channels]
 
+class DropDownMenuChoice():
+    def __init__(self) -> None:
+        self.chosen_value = None
+        self.__opt_var = None
+
+    def submitForm(self):    
+        self.chosen_value = self.__opt_var.get()
+        self.root.destroy()
+
+    def show_options(self, options, title, default_value=None):
+        self.root = Tk()
+        self.root.geometry('200x100')
+        self.root.title(title)
+        self.root.attributes('-toolwindow', True)
+
+        self.__opt_var = StringVar(self.root)
+        self.__opt_var.set(default_value) # default value
+ 
+                
+        for (text, value) in options.items():
+            Radiobutton(self.root, text = text, variable = self.__opt_var,
+                value = value).pack(side = TOP, ipady = 0)
+
+        Button(self.root, text='Select', command=self.submitForm, width=20,bg='gray',fg='white').place(x=30,y=70)
+
+        self.root.mainloop()
+        return self.chosen_value

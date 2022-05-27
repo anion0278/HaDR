@@ -1,3 +1,4 @@
+from ctypes import util
 import time
 import numpy as np
 import cv2, os
@@ -10,7 +11,6 @@ s.add_packages_paths()
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
 default_checkpoint_dir = wss.tested_model
-dataset_dir = s.path_to_datasets + wss.tested_dataset
 threshold = s.visualization_threshold
 
 def get_tested_image(input_channels, img_bgrd):
@@ -38,6 +38,7 @@ def detect(img_bgrd, arch):
     
 
 if __name__ == "__main__":
+    dataset_dir = s.path_to_datasets + utils.ask_user_for_dataset()
     checkpoint_path_full = utils.ask_user_for_checkpoint(s.path_to_models + default_checkpoint_dir)
     arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
     cfg = utils.get_config(arch, channels)
