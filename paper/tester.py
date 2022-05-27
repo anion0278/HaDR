@@ -27,10 +27,40 @@ import common_settings as s
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-TEST = False
-eval_dataset = wss.storage + ':/datasets/real_merged_l515_640x480'
-eval_dataset_annotations = '/instances_hands_6.json' if TEST else '/instances_hands_full.json'
+default_checkpoint = "2C-solov2_r101_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep-Fri_D06_M05_18h_14m"
+default_path = wss.storage + ":/models/"
 
+TEST = False
+eval_dataset = wss.storage + ":/datasets/real_merged_l515_640x480"
+eval_dataset_annotations = "/instances_hands_6.json" if TEST else "/instances_hands_full.json"
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Custom test detector")
+    parser.add_argument("--checkpoint_path", help="checkpoint path", default=default_path+default_checkpoint)
+    parser.add_argument("--out", help="output result file", default="D:/models/out.pkl")
+    parser.add_argument(
+        "--json_out",
+        help="output result file name without extension",
+        type=str)
+    parser.add_argument(
+        "--eval",
+        type=str,
+        nargs="+",
+        choices=["proposal", "proposal_fast", "bbox", "segm", "keypoints"],
+        help="eval types",
+        default="segm")
+    parser.add_argument("--show", action="store_true", help="show results")
+    parser.add_argument("--tmpdir", help="tmp dir for writing some results")
+    parser.add_argument(
+        "--launcher",
+        choices=["none", "pytorch", "slurm", "mpi"],
+        default="none",
+        help="job launcher")
+    parser.add_argument("--local_rank", type=int, default=0)
+    args = parser.parse_args()
+    if "LOCAL_RANK" not in os.environ:
+        os.environ["LOCAL_RANK"] = str(args.local_rank)
+    return args
 
 def get_masks(result, num_classes=80):
     if (len(result)>1):
@@ -54,7 +84,7 @@ def get_masks(result, num_classes=80):
                 if class_label_id >= num_classes: continue
                 cur_mask = seg_pred[idx, ...]
                 rle = mask_util.encode(
-                    np.array(cur_mask[:, :, np.newaxis], order='F'))[0]
+                    np.array(cur_mask[:, :, np.newaxis], order="F"))[0]
                 rst = (rle, cate_score[idx])
                 masks[class_label_id].append(rst)
             return masks
@@ -64,9 +94,7 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
     model.eval()
     results = []
     dataset = data_loader.dataset
-
     num_classes = len(dataset.CLASSES)
-
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         with torch.no_grad():
@@ -75,7 +103,7 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
         result = get_masks(seg_result, num_classes=num_classes)
         results.append(result)
             
-        batch_size = data['img'][0].size(0)
+        batch_size = data["img"][0].size(0)
         for _ in range(batch_size):
             prog_bar.update()
     return results
@@ -98,13 +126,12 @@ def multi_gpu_test(model, data_loader, tmpdir=None):
         results.append(result)
 
         if rank == 0:
-            batch_size = data['img'][0].size(0)
+            batch_size = data["img"][0].size(0)
             for _ in range(batch_size * world_size):
                 prog_bar.update()
 
     # collect results from all ranks
     results = collect_results(results, len(dataset), tmpdir)
-
     return results
 
 
@@ -117,18 +144,18 @@ def collect_results(result_part, size, tmpdir=None):
         dir_tensor = torch.full((MAX_LEN, ),
                                 32,
                                 dtype=torch.uint8,
-                                device='cuda')
+                                device="cuda")
         if rank == 0:
             tmpdir = tempfile.mkdtemp()
             tmpdir = torch.tensor(
-                bytearray(tmpdir.encode()), dtype=torch.uint8, device='cuda')
+                bytearray(tmpdir.encode()), dtype=torch.uint8, device="cuda")
             dir_tensor[:len(tmpdir)] = tmpdir
         dist.broadcast(dir_tensor, 0)
         tmpdir = dir_tensor.cpu().numpy().tobytes().decode().rstrip()
     else:
         mmcv.mkdir_or_exist(tmpdir)
     # dump the part result to the dir
-    mmcv.dump(result_part, osp.join(tmpdir, 'part_{}.pkl'.format(rank)))
+    mmcv.dump(result_part, osp.join(tmpdir, "part_{}.pkl".format(rank)))
     dist.barrier()
     # collect all parts
     if rank != 0:
@@ -137,7 +164,7 @@ def collect_results(result_part, size, tmpdir=None):
         # load results of all parts from tmp dir
         part_list = []
         for i in range(world_size):
-            part_file = osp.join(tmpdir, 'part_{}.pkl'.format(i))
+            part_file = osp.join(tmpdir, "part_{}.pkl".format(i))
             part_list.append(mmcv.load(part_file))
         # sort the results
         ordered_results = []
@@ -150,58 +177,30 @@ def collect_results(result_part, size, tmpdir=None):
         return ordered_results
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='MMDet test detector')
-    parser.add_argument('--checkpoint_path', help='checkpoint path')
-    parser.add_argument('--out', help='output result file')
-    parser.add_argument(
-        '--json_out',
-        help='output result file name without extension',
-        type=str)
-    parser.add_argument(
-        '--eval',
-        type=str,
-        nargs='+',
-        choices=['proposal', 'proposal_fast', 'bbox', 'segm', 'keypoints'],
-        help='eval types')
-    parser.add_argument('--show', action='store_true', help='show results')
-    parser.add_argument('--tmpdir', help='tmp dir for writing some results')
-    parser.add_argument(
-        '--launcher',
-        choices=['none', 'pytorch', 'slurm', 'mpi'],
-        default='none',
-        help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
-    args = parser.parse_args()
-    if 'LOCAL_RANK' not in os.environ:
-        os.environ['LOCAL_RANK'] = str(args.local_rank)
-    return args
-
-
 def main():
     print(sys.argv)
     args = parse_args()
 
     assert args.out or args.show or args.json_out, \
-        ('Please specify at least one operation (save or show the results) '
-         'with the argument "--out" or "--show" or "--json_out"')
+        ("Please specify at least one operation (save or show the results) "
+         "with the argument '--out' or '--show' or '--json_out'")
 
-    if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
-        raise ValueError('The output file must be a pkl file.')
+    if args.out is not None and not args.out.endswith((".pkl", ".pickle")):
+        raise ValueError("The output file must be a pkl file.")
 
-    if args.json_out is not None and args.json_out.endswith('.json'):
+    if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
 
     arch, channels = utils.parse_config_and_channels_from_checkpoint_path(args.checkpoint_path)
     cfg = utils.get_config(arch, channels)
 
-    if cfg.get('cudnn_benchmark', False):
+    if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
+    if args.launcher == "none":
         distributed = False
     else:
         distributed = True
@@ -226,20 +225,20 @@ def main():
 
     # build the model and load checkpoint
     model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
-    fp16_cfg = cfg.get('fp16', None)
+    fp16_cfg = cfg.get("fp16", None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
 
     checkpoint_path_full = args.checkpoint_path + "/" + s.tested_checkpoint_file_name
 
     while not osp.isfile(checkpoint_path_full):
-        print('Waiting for {} to exist...'.format(checkpoint_path_full))
+        print("Waiting for {} to exist...".format(checkpoint_path_full))
         time.sleep(60)
 
-    checkpoint = load_checkpoint(model, checkpoint_path_full, map_location='cpu')
+    checkpoint = load_checkpoint(model, checkpoint_path_full, map_location="cpu")
     # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
-    if 'CLASSES' in checkpoint['meta']:
-        model.CLASSES = checkpoint['meta']['CLASSES']
+    if "CLASSES" in checkpoint["meta"]:
+        model.CLASSES = checkpoint["meta"]["CLASSES"]
     else:
         model.CLASSES = dataset.CLASSES
 
@@ -252,30 +251,30 @@ def main():
 
     rank, _ = get_dist_info()
     if args.out and rank == 0:
-        print('\nwriting results to {}'.format(args.out))
+        print("\nwriting results to {}".format(args.out))
         mmcv.dump(outputs, args.out)
         eval_types = args.eval
         if eval_types:
-            print('Starting evaluate {}'.format(' and '.join(eval_types)))
-            if eval_types == ['proposal_fast']:
+            print("Starting evaluate {}".format(" and ".join(eval_types)))
+            if eval_types == ["proposal_fast"]:
                 result_file = args.out
                 coco_eval(result_file, eval_types, dataset.coco)
             else:
                 if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json_segm(dataset, outputs, args.out)
-                    eval_dest = wss.storage + ':/models/evals.txt'
+                    eval_dest = wss.storage + ":/models/evals.txt"
                     if not (os.path.exists(eval_dest)):
                         f =  open(eval_dest,"w")
                     else:
                         f = open(eval_dest,"a")
-                    f.write(args.checkpoint_path + '\n')
+                    f.write(args.checkpoint_path + "\n")
                     coco_eval(result_files, eval_types, dataset.coco,file = f)
                     f.close()
                 else:
                     for name in outputs[0]:
-                        print('\nEvaluating {}'.format(name))
+                        print("\nEvaluating {}".format(name))
                         outputs_ = [out[name] for out in outputs]
-                        result_file = args.out + '.{}'.format(name)
+                        result_file = args.out + ".{}".format(name)
                         result_files = results2json(dataset, outputs_,
                                                     result_file)
                         coco_eval(result_files, eval_types, dataset.coco)
@@ -287,9 +286,9 @@ def main():
         else:
             for name in outputs[0]:
                 outputs_ = [out[name] for out in outputs]
-                result_file = args.json_out + '.{}'.format(name)
+                result_file = args.json_out + ".{}".format(name)
                 results2json(dataset, outputs_, result_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

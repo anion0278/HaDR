@@ -21,7 +21,7 @@ default_experiment_tag = "1C"
 default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "mask_rcnn_r101_fpn"
 # default_arch_name = "solov2_r101_fpn"
-is_aug_enabled = False
+is_aug_enabled = True
 default_channels = 4
 TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
 
@@ -71,7 +71,6 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     print(args)
-    
     storage = wss.storage
     
     frozen_epochs = 10
