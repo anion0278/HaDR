@@ -72,6 +72,7 @@ class DropDownMenuChoice():
         self.root.geometry('200x100')
         self.root.title(title)
         self.root.attributes('-toolwindow', True)
+        self.root.eval('tk::PlaceWindow . center')
 
         self.__opt_var = StringVar(self.root)
         self.__opt_var.set(default_value) # default value
