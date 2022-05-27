@@ -64,6 +64,7 @@ class DropDownMenuChoice():
 
     def submitForm(self):    
         self.chosen_value = self.__opt_var.get()
+        self.root.quit()
         self.root.destroy()
 
     def show_options(self, options, title, default_value=None):
@@ -81,6 +82,7 @@ class DropDownMenuChoice():
                 value = value).pack(side = TOP, ipady = 0)
 
         Button(self.root, text='Select', command=self.submitForm, width=20,bg='gray',fg='white').place(x=30,y=70)
+        self.root.attributes("-topmost", True)
 
         self.root.mainloop()
         return self.chosen_value

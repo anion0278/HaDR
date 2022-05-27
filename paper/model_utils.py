@@ -19,6 +19,7 @@ def ask_user_for_dataset():
 def ask_user_for_checkpoint(default_checkpoint_path):
     root = tk.Tk()
     root.withdraw()
+    root.attributes("-topmost", True)
     while True:
         default_checkpoint_path = filedialog.askdirectory(initialdir=default_checkpoint_path, title='Select a directory of trained model')
         checkpoint_path_full = os.path.join(default_checkpoint_path, s.tested_checkpoint_file_name)
@@ -26,6 +27,7 @@ def ask_user_for_checkpoint(default_checkpoint_path):
             print(f"Selected {checkpoint_path_full}")
             break
         tk.messagebox.showerror(title="Choose different folder", message=f"Folder does not contain {s.tested_checkpoint_file_name}")
+    root.destroy()
     return checkpoint_path_full
 
 def get_pipelines(in_channels):
