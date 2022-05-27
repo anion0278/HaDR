@@ -25,13 +25,13 @@ test_train_std=[58.395, 57.12, 57.375, 45.978]
 def str2bool(v):
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
         import argparse 
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def add_packages_paths():
@@ -62,27 +62,27 @@ class DropDownMenuChoice():
         self.chosen_value = None
         self.__opt_var = None
 
-    def submitForm(self):    
+    def submitForm(self, e = None):    
         self.chosen_value = self.__opt_var.get()
         self.root.quit()
         self.root.destroy()
 
     def show_options(self, options, title, default_value=None):
         self.root = Tk()
-        self.root.geometry('200x100')
+        self.root.geometry("200x100")
         self.root.title(title)
-        self.root.attributes('-toolwindow', True)
-        self.root.eval('tk::PlaceWindow . center')
+        self.root.attributes("-toolwindow", True)
+        self.root.eval("tk::PlaceWindow . center")
 
         self.__opt_var = StringVar(self.root)
         self.__opt_var.set(default_value) # default value
- 
-                
+
         for (text, value) in options.items():
             Radiobutton(self.root, text = text, variable = self.__opt_var,
                 value = value).pack(side = TOP, ipady = 0)
-
-        Button(self.root, text='Select', command=self.submitForm, width=20,bg='gray',fg='white').place(x=30,y=70)
+        
+        Button(self.root, text="Select", command=self.submitForm, width=20,bg="gray",fg="white").place(x=30,y=70)
+        self.root.bind('<Return>', self.submitForm)
         self.root.attributes("-topmost", True)
 
         self.root.mainloop()
