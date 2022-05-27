@@ -27,17 +27,20 @@ import common_settings as s
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
+TEST = False
 default_checkpoint = "2C-solov2_r101_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep-Fri_D06_M05_18h_14m"
 default_path = wss.storage + ":/models/"
 
-TEST = False
 eval_dataset = wss.storage + ":/datasets/real_merged_l515_640x480"
-eval_dataset_annotations = "/instances_hands_6.json" if TEST else "/instances_hands_full.json"
+eval_dataset_annotations = "/instances_hands_full.json"
+if TEST:
+    eval_dataset_annotations = "/instances_hands_6.json" 
+    wss.workers = 1
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
     parser.add_argument("--checkpoint_path", help="checkpoint path", default=default_path+default_checkpoint)
-    parser.add_argument("--out", help="output result file", default="D:/models/out.pkl")
+    parser.add_argument("--out", help="output result file", default=wss.storage+":/models/out.pkl")
     parser.add_argument(
         "--json_out",
         help="output result file name without extension",
@@ -48,7 +51,7 @@ def parse_args():
         nargs="+",
         choices=["proposal", "proposal_fast", "bbox", "segm", "keypoints"],
         help="eval types",
-        default="segm")
+        default=["segm"])
     parser.add_argument("--show", action="store_true", help="show results")
     parser.add_argument("--tmpdir", help="tmp dir for writing some results")
     parser.add_argument(
@@ -219,7 +222,7 @@ def main():
     data_loader = build_dataloader(
         dataset,
         imgs_per_gpu=1,
-        workers_per_gpu=2,
+        workers_per_gpu=wss.workers,
         dist=distributed,
         shuffle=False)
 
@@ -263,12 +266,9 @@ def main():
                 if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json_segm(dataset, outputs, args.out)
                     eval_dest = wss.storage + ":/models/evals.txt"
-                    if not (os.path.exists(eval_dest)):
-                        f =  open(eval_dest,"w")
-                    else:
-                        f = open(eval_dest,"a")
+                    f = open(eval_dest,"a+")
                     f.write(args.checkpoint_path + "\n")
-                    coco_eval(result_files, eval_types, dataset.coco,file = f)
+                    coco_eval(result_files, eval_types, dataset.coco, file = f)
                     f.close()
                 else:
                     for name in outputs[0]:

@@ -31,6 +31,8 @@ MANIFEST
 *.manifest
 *.spec
 
+!_mask.cp37-win_amd64.pyd
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
