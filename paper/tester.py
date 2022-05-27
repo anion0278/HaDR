@@ -26,7 +26,7 @@ import common_settings as s
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-TEST = False
+TEST = True
 default_checkpoint = wss.tested_model
 default_path = s.path_to_models
 
@@ -192,12 +192,12 @@ def main():
     if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
 
-    eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
-
     if len(args.checkpoint_path) == 2:
         checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+        eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
     else:
         checkpoint_path_full = os.path.join(args.checkpoint_path, s.tested_checkpoint_file_name)
+        eval_dataset = s.path_to_datasets + wss.tested_dataset
 
     arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
     cfg = utils.get_config(arch, channels)
