@@ -26,9 +26,7 @@ import common_settings as s
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-TEST = True
-default_checkpoint = wss.tested_model
-default_path = s.path_to_models
+TEST = False
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -37,7 +35,7 @@ if TEST:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
-    parser.add_argument("--checkpoint_path", help="checkpoint path", default=(None, default_path+default_checkpoint))
+    parser.add_argument("--checkpoint_path", help="checkpoint path", default=(None, s.path_to_models+wss.tested_model))
     parser.add_argument("--out", help="output result file", default=s.path_to_models + "out.pkl")
     parser.add_argument(
         "--json_out",

@@ -9,7 +9,6 @@ import common_settings as s
 s.add_packages_paths()
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
-default_checkpoint_dir = wss.tested_model
 threshold = s.visualization_threshold
 
 def get_tested_image(input_channels, img_bgrd):
@@ -36,7 +35,7 @@ def detect(img_bgrd, arch):
     
 
 if __name__ == "__main__":
-    checkpoint_path_full = utils.ask_user_for_checkpoint(s.path_to_models + default_checkpoint_dir)
+    checkpoint_path_full = utils.ask_user_for_checkpoint(s.path_to_models + wss.tested_model)
     arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
     cfg = utils.get_config(arch, channels)
     model = init_detector(cfg, checkpoint_path_full, device='cuda:0')
