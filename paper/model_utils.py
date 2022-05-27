@@ -1,9 +1,23 @@
 import ws_specific_settings as wss
-
+import os
 import common_settings as s
 s.add_packages_paths()
 from mmcv import Config
 from mmdet.apis import set_random_seed
+import tkinter as tk
+from tkinter import filedialog
+
+def ask_user_for_checkpoint(default_checkpoint_path):
+    root = tk.Tk()
+    root.withdraw()
+    while True:
+        default_checkpoint_path = filedialog.askdirectory(initialdir=default_checkpoint_path, title='Select a directory of trained model')
+        checkpoint_path_full = os.path.join(default_checkpoint_path, s.tested_checkpoint_file_name)
+        if os.path.exists(checkpoint_path_full):
+            print(f"Selected {checkpoint_path_full}")
+            break
+        tk.messagebox.showerror(title="Choose different folder", message=f"Folder does not contain {s.tested_checkpoint_file_name}")
+    return checkpoint_path_full
 
 def get_pipelines(in_channels):
     from mmcv import Config

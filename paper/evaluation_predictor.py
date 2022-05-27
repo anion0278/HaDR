@@ -9,10 +9,9 @@ import common_settings as s
 s.add_packages_paths()
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
-image_dir = r"E:\datasets\real_merged_l515_640x480"
-# checkpoint_dir = "2G-solov2_light_448_r50_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep"
-checkpoint_dir = "2T-solov2_r101_fpn_4ch-sim_train_320x256_full-AugTrue-30+20ep-Wed_D18_M05_13h_25m"
-threshold = 0.5
+checkpoint_dir = wss.tested_model
+image_dir = s.path_to_datasets + wss.tested_dataset
+threshold = s.visualization_threshold
 
 def get_tested_image(input_channels, img_bgrd):
     options = { 1: img_bgrd[:,:,3:4], 
@@ -39,7 +38,7 @@ def detect(img_bgrd, arch):
     
 
 if __name__ == "__main__":
-    checkpoint_path = wss.storage + ":/models/" + checkpoint_dir 
+    checkpoint_path = s.path_to_models + checkpoint_dir 
     arch, channels = utils.parse_config_and_channels_from_checkpoint_path(checkpoint_path)
     cfg = utils.get_config(arch, channels)
     model = init_detector(cfg, checkpoint_path + "/" + s.tested_checkpoint_file_name, device='cuda:0')

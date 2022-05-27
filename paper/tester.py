@@ -12,7 +12,6 @@ import torch.nn.functional as F
 import torch.distributed as dist
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import init_dist, get_dist_info, load_checkpoint
-
 from mmdet.core import coco_eval, results2json, results2json_segm, wrap_fp16_model, tensor2imgs, get_classes
 from mmdet.datasets import build_dataloader, build_dataset
 from mmdet.models import build_detector
@@ -28,10 +27,10 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
-default_checkpoint = "2C-solov2_r101_fpn_4ch-sim_train_320x256_full-AugTrue-10+20ep-Fri_D06_M05_18h_14m"
-default_path = wss.storage + ":/models/"
+default_checkpoint = wss.tested_model
+default_path = s.path_to_models
 
-eval_dataset = wss.storage + ":/datasets/real_merged_l515_640x480"
+eval_dataset = s.path_to_datasets + wss.tested_dataset
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
     eval_dataset_annotations = "/instances_hands_6.json" 
@@ -39,8 +38,8 @@ if TEST:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
-    parser.add_argument("--checkpoint_path", help="checkpoint path", default=default_path+default_checkpoint)
-    parser.add_argument("--out", help="output result file", default=wss.storage+":/models/out.pkl")
+    parser.add_argument("--checkpoint_path", help="checkpoint path", default=(None, default_path+default_checkpoint))
+    parser.add_argument("--out", help="output result file", default=s.path_to_models + "out.pkl")
     parser.add_argument(
         "--json_out",
         help="output result file name without extension",
@@ -194,7 +193,12 @@ def main():
     if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
 
-    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(args.checkpoint_path)
+    if len(args.checkpoint_path) == 2:
+        checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+    else:
+        checkpoint_path_full = os.path.join(args.checkpoint_path, s.tested_checkpoint_file_name)
+
+    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
     cfg = utils.get_config(arch, channels)
 
     if cfg.get("cudnn_benchmark", False):
@@ -232,8 +236,6 @@ def main():
     if fp16_cfg is not None:
         wrap_fp16_model(model)
 
-    checkpoint_path_full = args.checkpoint_path + "/" + s.tested_checkpoint_file_name
-
     while not osp.isfile(checkpoint_path_full):
         print("Waiting for {} to exist...".format(checkpoint_path_full))
         time.sleep(60)
@@ -265,9 +267,9 @@ def main():
             else:
                 if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json_segm(dataset, outputs, args.out)
-                    eval_dest = wss.storage + ":/models/evals.txt"
+                    eval_dest = s.path_to_models + "evals.txt"
                     f = open(eval_dest,"a+")
-                    f.write(args.checkpoint_path + "\n")
+                    f.write(checkpoint_path_full + "\n")
                     coco_eval(result_files, eval_types, dataset.coco, file = f)
                     f.close()
                 else:
@@ -288,7 +290,6 @@ def main():
                 outputs_ = [out[name] for out in outputs]
                 result_file = args.json_out + ".{}".format(name)
                 results2json(dataset, outputs_, result_file)
-
 
 if __name__ == "__main__":
     main()
