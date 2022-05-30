@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
-    cfg.load_from = f"{storage}{s.path_to_models}{args.arch}.pth"
+    cfg.load_from = f"{s.path_to_models}{args.arch}.pth"
     cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = 4
     cfg.total_epochs = frozen_epochs

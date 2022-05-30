@@ -36,10 +36,10 @@ def get_pipelines(in_channels):
         1 : "pipelines_d",
         3 : "pipelines_rgb",
         4 : "pipelines_rgbd" }
-    return Config.fromfile(s.path_to_configs % options[in_channels],'temp_pipe_config').data
+    return Config.fromfile(s.path_to_configs_formatted % options[in_channels],'temp_pipe_config').data
 
 def get_config(arch_name, channels):
-    cfg = Config.fromfile(s.path_to_configs % arch_name, 'temp')
+    cfg = Config.fromfile(s.path_to_configs_formatted % arch_name, 'temp')
     cfg.model.backbone.in_channels = channels
     cfg.data = get_pipelines(cfg.model.backbone.in_channels)
     __set_config_params(cfg)
