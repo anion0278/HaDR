@@ -54,7 +54,7 @@ def get_main_channel_name(channels):
     return "depth" if  channels == 1 else "color"
 
 def __set_config_params(cfg):
-    cfg.data.imgs_per_gpu = 32
+    cfg.data.imgs_per_gpu = s.batch_size
     cfg.data.workers_per_gpu = wss.workers
     cfg.data.train.type = "CocoDataset"
     cfg.data.val.type = "CocoDataset"
