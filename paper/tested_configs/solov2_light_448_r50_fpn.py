@@ -12,10 +12,8 @@ model = dict(
         num_stages=4,
         out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
         frozen_stages=-1, # -1 is unfrozen, 0 -> C1 is frozen, 1 - C1, C2 are frozen and so on
-        style='pytorch'),
-        # norm_eval = True # true by default, "you're fine-tuning to minimize training, it's typically best to keep batch normalization frozen"
-        # https://stackoverflow.com/questions/63016740/why-its-necessary-to-frozen-all-inner-state-of-a-batch-normalization-layer-when
-        # required for traning from scratch
+        style='pytorch',
+        norm_eval = True), # true by default; false - retrain BatchNorm, https://stackoverflow.com/questions/63016740/why-its-necessary-to-frozen-all-inner-state-of-a-batch-normalization-layer-when
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
