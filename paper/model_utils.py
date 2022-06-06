@@ -73,7 +73,13 @@ def __set_config_params(cfg):
     cfg.log_level = 'INFO'
 
     if "pretrained" in cfg.model: cfg.model.pop("pretrained") # get rid of pretrained backbone since we will init weights from checkpoint
-    cfg.lr_config = dict(policy="poly", power=0.9, min_lr=1e-7, by_epoch=False) # if by_epoch = False, then changes according to iteration
+    # cfg.lr_config = dict(policy="poly", power=0.9, min_lr=1e-7, by_epoch=False) # if by_epoch = False, then changes according to iteration
+    cfg.lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=500,
+    warmup_ratio=0.01,
+    step=[7])
     cfg.optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
     #dict(type='Adam', lr=0.0003, weight_decay=0.0001)
     cfg.optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
