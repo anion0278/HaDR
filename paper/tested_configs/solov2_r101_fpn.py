@@ -9,9 +9,10 @@ model = dict(
         depth=101,
         in_channels = 3,
         num_stages=4, # there are actually 5 stages, conv1 is freezed whenever frozen_stages >= 0
-        frozen_stages=-1, 
         out_indices=(0, 1, 2, 3), # C2, C3, C4, C5
-        style='pytorch'), 
+        frozen_stages=-1, # -1 is unfrozen, 0 -> C1 is frozen, 1 - C1, C2 are frozen and so on
+        style='pytorch',
+        norm_eval = True), # true by default; false - retrain BatchNorm
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],

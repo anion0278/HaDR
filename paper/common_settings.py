@@ -6,7 +6,7 @@ path_to_datasets= wss.storage + ":/datasets/"
 path_to_models= wss.storage + ":/models/"
 path_to_configs_formatted = "./paper/tested_configs/%s.py"
 tested_checkpoint_file_name = "final.pth"
-visualization_threshold = 0.5
+visualization_threshold = 0.2
 batch_size = 8
 
 # model_input_size = (256, 320) #TODO

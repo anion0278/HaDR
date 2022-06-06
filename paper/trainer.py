@@ -104,7 +104,7 @@ if __name__ == "__main__":
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
     cfg.load_from = f"{s.path_to_models}{args.arch}.pth"
-    cfg.optimizer.lr = 1e-4
+    cfg.optimizer.lr = 1e-3
     cfg.model.backbone.frozen_stages = 4
     cfg.total_epochs = frozen_epochs
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 # TODO DRY function
 
     cfg.load_from = latest_checkpoint
-    cfg.optimizer.lr = 1e-5
+    cfg.optimizer.lr = 1e-4
     cfg.model.backbone.frozen_stages = -1
     cfg.total_epochs = unfrozen_epochs
     model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
