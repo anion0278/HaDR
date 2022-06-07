@@ -12,12 +12,12 @@ batch_size = 8
 # model_input_size = (256, 320) #TODO
 
 # from custom train dataset
-sim_train_mean=[100.618, 99.171, 96.664, 37.286] 
-sim_train_std=[67.012, 66.945, 68.539, 47.192]
+sim_train_mean=[96.924, 90.654, 88.884, 40.039] 
+sim_train_std=[69.349, 66.891, 66.718, 48.845]
 
 # from custom val dataset
-sim_val_mean=[99.857, 96.167, 97.676, 55.093] 
-sim_val_std=[66.85, 66.183, 67.875, 55.906]
+sim_val_mean=[102.951, 96.150, 98.884, 53.006] 
+sim_val_std=[68.324, 66.890, 68.474, 49.755]
 
 # from coco
 test_train_mean=[123.675, 116.28, 103.53, 35.3792] 
