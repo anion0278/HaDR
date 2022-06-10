@@ -315,6 +315,8 @@ class CustomizedEvalParams(Params):
         medium = annotation_areas[len(annotation_areas) * 2 // 3 - 1] + 1
         large = annotation_areas[len(annotation_areas) - 1] + 1
 
+        print(f"Calculated object sizes from distribution \n Small limit: {small} \n Medium limit: {medium} \n Largest object area: {large}")
+
         # import matplotlib.pyplot as plt
         # plt.hist(annotation_areas, edgecolor="green", bins=50)
         # plt.show()
