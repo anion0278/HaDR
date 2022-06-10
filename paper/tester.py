@@ -311,9 +311,9 @@ class CustomizedEvalParams(Params):
 
         annotation_areas.sort()
 
-        small = annotation_areas[len(annotation_areas) // 3 - 1]
-        medium = annotation_areas[len(annotation_areas) * 2 // 3 - 1]
-        large = annotation_areas[len(annotation_areas) - 1]
+        small = annotation_areas[len(annotation_areas) // 3 - 1] + 1
+        medium = annotation_areas[len(annotation_areas) * 2 // 3 - 1] + 1
+        large = annotation_areas[len(annotation_areas) - 1] + 1
 
         # import matplotlib.pyplot as plt
         # plt.hist(annotation_areas, edgecolor="green", bins=50)
