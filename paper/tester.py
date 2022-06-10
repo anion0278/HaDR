@@ -67,7 +67,7 @@ def get_masks(result, num_classes=80):
         for idx in range(len(result[1][0])):
             rle = result[1][0][idx]
             rst = (rle, result[0][0][idx][4])
-            masks[0].append(rst)                #hardcocded single category
+            masks[0].append(rst)                #hardcoded single category
         return masks
     else:
         for cur_result in result:
@@ -255,7 +255,7 @@ def main():
 
     rank, _ = get_dist_info()
     if args.out and rank == 0:
-        print("\nwriting results to {}".format(args.out))
+        print("\nWriting results to {}".format(args.out))
         mmcv.dump(outputs, args.out)
         eval_types = args.eval
         if eval_types:
@@ -269,7 +269,8 @@ def main():
                     eval_dest = s.path_to_models + "evals.txt"
                     f = open(eval_dest,"a+")
                     f.write(checkpoint_path_full + "\n")
-                    coco_eval(result_files, eval_types, dataset.coco, file = f)
+                    eval_params = CustomizedEvalParams(dataset.coco)
+                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params)
                     f.close()
                 else:
                     for name in outputs[0]:
@@ -289,6 +290,38 @@ def main():
                 outputs_ = [out[name] for out in outputs]
                 result_file = args.json_out + ".{}".format(name)
                 results2json(dataset, outputs_, result_file)
+
+
+
+
+from pycocotools.cocoeval import Params
+class CustomizedEvalParams(Params):
+    def __init__(self, coco_dataset):
+        self.smallObjAreaRng, self.mediumObjAreaRng, _ = self.__calc_object_sizes(coco_dataset) # large obj limit is not needed
+        super().__init__()
+
+    def setDetParams(self):
+        super().setDetParams()
+        self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, self.smallObjAreaRng], [self.smallObjAreaRng, self.mediumObjAreaRng], [self.mediumObjAreaRng, 1e5 ** 2]]
+
+    def __calc_object_sizes(self, coco):
+        annotation_areas = []
+        for i in coco.anns:
+            annotation_areas.append(coco.anns[i]['area'])
+
+        annotation_areas.sort()
+
+        small = annotation_areas[len(annotation_areas) // 3 - 1]
+        medium = annotation_areas[len(annotation_areas) * 2 // 3 - 1]
+        large = annotation_areas[len(annotation_areas) - 1]
+
+        # import matplotlib.pyplot as plt
+        # plt.hist(annotation_areas, edgecolor="green", bins=50)
+        # plt.show()
+        # plt.hist(annotation_areas, edgecolor="green", bins=[0, small, medium, large])
+        # plt.show()
+
+        return small, medium, large
 
 if __name__ == "__main__":
     main()
