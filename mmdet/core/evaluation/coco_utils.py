@@ -16,7 +16,8 @@ def coco_eval(result_files,
               coco,
               max_dets=(100, 300, 1000),
               classwise=False,
-              file = None):
+              file = None,
+              override_eval_params = None):
     for res_type in result_types:
         assert res_type in [
             'proposal', 'proposal_fast', 'bbox', 'segm', 'keypoints'
@@ -44,7 +45,7 @@ def coco_eval(result_files,
         coco_dets = coco.loadRes(result_file)
         img_ids = coco.getImgIds()
         iou_type = 'bbox' if res_type == 'proposal' else res_type
-        cocoEval = COCOeval(coco, coco_dets, iou_type, file = file)
+        cocoEval = COCOeval(coco, coco_dets, iou_type, file = file, override_eval_params = override_eval_params)
         cocoEval.params.imgIds = img_ids
         if res_type == 'proposal':
             cocoEval.params.useCats = 0
@@ -82,8 +83,6 @@ def coco_eval(result_files,
             table_data += [result for result in results_2d]
             table = AsciiTable(table_data)
             print(table.table)
-            
-
 
 
 def fast_eval_recall(results,

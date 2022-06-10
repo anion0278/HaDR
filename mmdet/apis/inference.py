@@ -328,7 +328,7 @@ def show_result_ins(img,
         center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)
         vis_pos = (max(int(center_x) - 10, 0), int(center_y))
         cv2.putText(img_show, label_text, vis_pos,
-                        cv2.FONT_HERSHEY_COMPLEX, 0.3, (255, 255, 255))  # green
+                        cv2.FONT_ITALIC, 0.45, (255, 255, 255))  
     if out_file is None:
         return img_show
     else:
