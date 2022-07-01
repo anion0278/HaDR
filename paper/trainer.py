@@ -21,6 +21,7 @@ default_experiment_tag = "1C"
 default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "mask_rcnn_r101_fpn"
 # default_arch_name = "solov2_r101_fpn"
+is_batchnorm_fixed = False
 is_aug_enabled = True
 default_channels = 4
 TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
@@ -73,10 +74,10 @@ if __name__ == "__main__":
     print(args)
     storage = wss.storage
     
-    frozen_epochs = 10
+    frozen_epochs = 5
     unfrozen_epochs = 20
     training_dataset = "sim_train_320x256" 
-    validation_dataset = "sim_val_320x256"
+    validation_dataset = "real_merged_l515_640x480"
 
     dataset_size = "full" 
     if TEST:
@@ -89,7 +90,7 @@ if __name__ == "__main__":
 
     cfg = utils.get_config(args.arch, args.channels)
 
-    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-Aug{args.aug}-BS{cfg.data.imgs_per_gpu}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
+    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-{training_dataset}_{dataset_size}-Aug{args.aug}-BS{cfg.data.imgs_per_gpu}-BNfixed{is_batchnorm_fixed}-{frozen_epochs}+{unfrozen_epochs}ep-{timestamp}"
     print("CURRENT CONFIGURATION ID: " + config_id)
     cfg.work_dir = storage + ":/models/" + config_id
     os.makedirs(cfg.work_dir, exist_ok=True)
@@ -100,6 +101,8 @@ if __name__ == "__main__":
     cfg.data.val.ann_file = f"{val_dataset_path}/instances_hands_{dataset_size}.json"
     cfg.data.val.img_prefix = f"{val_dataset_path}/{main_channel}/"
     datasets = get_datasets(cfg)
+
+    cfg.model.backbone.norm_eval = is_batchnorm_fixed
 
 # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 

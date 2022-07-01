@@ -67,7 +67,7 @@ def __set_config_params(cfg):
     cfg.gpus = wss.gpus
     cfg.dist_params = dict(backend='nccl')
     cfg.resume_from = None
-    cfg.checkpoint_config = dict(create_symlink=False, interval = 4) # TRY TO USE state of optimizer save_optimizer = True
+    cfg.checkpoint_config = dict(create_symlink=False, interval = 10) # TRY TO USE state of optimizer save_optimizer = True
 
     cfg.log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
     cfg.log_level = 'INFO'
@@ -79,7 +79,7 @@ def __set_config_params(cfg):
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.01,
-    step=[7])
+    step=[7,18])
     cfg.optimizer = dict(type='SGD', lr=0.0002, momentum=0.9, weight_decay=0.001)
     #dict(type='Adam', lr=0.0003, weight_decay=0.0001)
     cfg.optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))

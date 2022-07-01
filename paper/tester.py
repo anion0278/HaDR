@@ -237,7 +237,7 @@ def main():
 
     while not osp.isfile(checkpoint_path_full):
         print("Waiting for {} to exist...".format(checkpoint_path_full))
-        time.sleep(60)
+        time.sleep(10)
 
     checkpoint = load_checkpoint(model, checkpoint_path_full, map_location="cpu")
     # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
