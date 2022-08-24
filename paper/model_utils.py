@@ -6,6 +6,7 @@ from mmcv import Config
 from mmdet.apis import set_random_seed
 import tkinter as tk
 from tkinter import filedialog
+import tkinter.messagebox # this is required! see https://stackoverflow.com/a/29780454/10571624
 
 def ask_user_for_dataset():
     options = {
