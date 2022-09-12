@@ -12,7 +12,7 @@ from mmdet.models import build_detector
 from mmdet.apis import train_detector
 import ws_specific_settings as wss
 import model_utils as utils
-import os, argparse
+import os, argparse, traceback
 import email_notification as outlook
 
 import warnings
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         args = parse_args()
         print(args)
         storage = wss.storage
-        
+
         frozen_epochs = 10
         frozen_lr = 1e-4 
         unfrozen_epochs = 20
@@ -138,5 +138,6 @@ if __name__ == "__main__":
         outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
 
     except Exception as ex:
-        print(f"Exception occured: {str(ex)}")
-        outlook.send_email("HGR: Exception during training!", str(ex), wss.email_recipients)
+        error_desc = str(ex) + "\n"+ "".join(traceback.TracebackException.from_exception(ex).format())
+        print(f"Exception occured: {error_desc}")
+        outlook.send_email("HGR: Exception during training!", error_desc, wss.email_recipients)
