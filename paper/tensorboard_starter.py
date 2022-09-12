@@ -5,7 +5,7 @@ import common_settings as s
 import model_utils as utils
 import ws_specific_settings as wss
 import tkinter as tk
-import tkfilebrowser
+import tkfilebrowser # pip tkfilebrowser, pywin32
 
 def ask_user_for_log_dirs(default_checkpoint_path):
     root = tk.Tk()

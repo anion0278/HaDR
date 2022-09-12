@@ -1,4 +1,5 @@
 import common_settings as s
+from paper.email_notification import send_email
 s.add_packages_paths()
 import mmcv
 # print(os.path.abspath(mmcv.__file__))
@@ -12,6 +13,7 @@ from mmdet.apis import train_detector
 import ws_specific_settings as wss
 import model_utils as utils
 import os, argparse
+import email_notification as outlook
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
@@ -70,65 +72,71 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    print(args)
-    storage = wss.storage
-    
-    frozen_epochs = 10
-    frozen_lr = 1e-4 
-    unfrozen_epochs = 20
-    unfrozen_lr = 1e-5
-    training_dataset = "sim_train_320x256" 
-    validation_dataset = "real_merged_l515_640x480"
+    try:
+        args = parse_args()
+        print(args)
+        storage = wss.storage
+        
+        frozen_epochs = 10
+        frozen_lr = 1e-4 
+        unfrozen_epochs = 20
+        unfrozen_lr = 1e-5
+        training_dataset = "sim_train_320x256" 
+        validation_dataset = "real_merged_l515_640x480"
 
-    dataset_size = "full" 
-    if TEST:
-        dataset_size = "100" 
-        wss.workers = 2
-    train_dataset_path = s.path_to_datasets + training_dataset
-    val_dataset_path =  s.path_to_datasets + validation_dataset
-    main_channel =  utils.get_main_channel_name(args.channels)
-    timestamp = dt.now().strftime("%a_%d_%b_%Hh_%Mm") 
+        dataset_size = "full" 
+        if TEST:
+            dataset_size = "100" 
+            wss.workers = 2
+        train_dataset_path = s.path_to_datasets + training_dataset
+        val_dataset_path =  s.path_to_datasets + validation_dataset
+        main_channel =  utils.get_main_channel_name(args.channels)
+        timestamp = dt.now().strftime("%a_%d_%b_%Hh_%Mm") 
 
-    cfg = utils.get_config(args.arch, args.channels)
+        cfg = utils.get_config(args.arch, args.channels)
 
-    config_id = f"{args.tag}-{args.arch}_{args.channels}ch-DS{training_dataset}_{dataset_size}-Aug{args.aug}-BS{cfg.data.imgs_per_gpu}-BNfixed{is_batchnorm_fixed}"\
+        config_id = f"{args.tag}-{args.arch}_{args.channels}ch-DS{training_dataset}_{dataset_size}-Aug{args.aug}-BS{cfg.data.imgs_per_gpu}-BNfixed{is_batchnorm_fixed}"\
                 + f"-FrozenEP{frozen_epochs}_LR{frozen_lr}+UnfrozenEP{unfrozen_epochs}_LR{unfrozen_lr}-LRConfig{cfg.lr_config.policy}-{timestamp}"
 
-    print("CURRENT CONFIGURATION ID: " + config_id)
-    cfg.work_dir = storage + ":/models/" + config_id
-    os.makedirs(cfg.work_dir, exist_ok=True)
+        print("CURRENT CONFIGURATION ID: " + config_id)
+        cfg.work_dir = storage + ":/models/" + config_id
+        os.makedirs(cfg.work_dir, exist_ok=True)
 
-    cgf = manage_aug(cfg, args.aug)
-    cfg.data.train.ann_file =  f"{train_dataset_path}/instances_hands_{dataset_size}.json"
-    cfg.data.train.img_prefix =  f"{train_dataset_path}/{main_channel}/"
-    cfg.data.val.ann_file = f"{val_dataset_path}/instances_hands_{dataset_size}.json"
-    cfg.data.val.img_prefix = f"{val_dataset_path}/{main_channel}/"
-    datasets = get_datasets(cfg)
+        cgf = manage_aug(cfg, args.aug)
+        cfg.data.train.ann_file =  f"{train_dataset_path}/instances_hands_{dataset_size}.json"
+        cfg.data.train.img_prefix =  f"{train_dataset_path}/{main_channel}/"
+        cfg.data.val.ann_file = f"{val_dataset_path}/instances_hands_{dataset_size}.json"
+        cfg.data.val.img_prefix = f"{val_dataset_path}/{main_channel}/"
+        datasets = get_datasets(cfg)
 
-    cfg.model.backbone.norm_eval = is_batchnorm_fixed
+        cfg.model.backbone.norm_eval = is_batchnorm_fixed
 
-# FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
+    # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
-    cfg.load_from = f"{s.path_to_models}{args.arch}.pth"
-    cfg.optimizer.lr = frozen_lr
-    cfg.model.backbone.frozen_stages = 4
-    cfg.total_epochs = frozen_epochs
-    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
-    model.CLASSES = datasets[0].CLASSES # needed for the first time
-    train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
-    latest_checkpoint = cfg.work_dir + "/intermediate.pth" 
-    save_checkpoint(model, latest_checkpoint)
-    print("Intermediate training finished")
+        cfg.load_from = f"{s.path_to_models}{args.arch}.pth"
+        cfg.optimizer.lr = frozen_lr
+        cfg.model.backbone.frozen_stages = 4
+        cfg.total_epochs = frozen_epochs
+        model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+        model.CLASSES = datasets[0].CLASSES # needed for the first time
+        train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
+        latest_checkpoint = cfg.work_dir + "/intermediate.pth" 
+        save_checkpoint(model, latest_checkpoint)
+        print("Intermediate training finished")
 
-# NON-FROZEN
-# TODO DRY function
+    # NON-FROZEN
+    # TODO DRY function
 
-    cfg.load_from = latest_checkpoint
-    cfg.optimizer.lr = unfrozen_lr
-    cfg.model.backbone.frozen_stages = -1
-    cfg.total_epochs = unfrozen_epochs
-    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
-    train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
-    save_checkpoint(model, cfg.work_dir + "/final.pth")  
-    print("Final (full network) training finished!")
+        cfg.load_from = latest_checkpoint
+        cfg.optimizer.lr = unfrozen_lr
+        cfg.model.backbone.frozen_stages = -1
+        cfg.total_epochs = unfrozen_epochs
+        model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+        train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
+        save_checkpoint(model, cfg.work_dir + "/final.pth")  
+        print("Final (full network) training finished!")
+        outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
+
+    except Exception as ex:
+        print(f"Exception occured: {str(ex)}")
+        outlook.send_email("HGR: Exception during training!", str(ex), wss.email_recipients)

@@ -2,3 +2,13 @@
 cython
 numpy
 torch>=1.1
+
+# required for imagecorruptions, which is in /modified_packages. It would have been installed automatically from pip, but since its modified, we need to isntall it manually
+scikit-image
+
+# other required stuff
+pywin32
+tkfilebrowser
+
+# needs to be replaced with customized
+pyrealsense2 
