@@ -83,6 +83,7 @@ if __name__ == "__main__":
         unfrozen_lr = 1e-5
         training_dataset = "sim_train_320x256" 
         validation_dataset = "real_merged_l515_640x480"
+        is_model_coco_pretrained = True
 
         dataset_size = "full" 
         if TEST:
@@ -95,8 +96,11 @@ if __name__ == "__main__":
 
         cfg = utils.get_config(args.arch, args.channels)
 
-        config_id = f"{args.tag}-{args.arch}_{args.channels}ch-DS{training_dataset}_{dataset_size}-Aug{args.aug}-BS{cfg.data.imgs_per_gpu}-BNfixed{is_batchnorm_fixed}"\
-                + f"-FrozenEP{frozen_epochs}_LR{frozen_lr}+UnfrozenEP{unfrozen_epochs}_LR{unfrozen_lr}-LRConfig{cfg.lr_config.policy}-{timestamp}"
+        policy = cfg.lr_config.policy
+        if policy == "step": policy += str(cfg.lr_config.step)
+
+        config_id = f"{args.tag}-{args.arch}_{args.channels}ch-CocoPretrained={is_model_coco_pretrained}-DS={training_dataset}_{dataset_size}-Aug={args.aug}-BS={cfg.data.imgs_per_gpu}-BNfixed={is_batchnorm_fixed}"\
+                + f"-FrozenEP={frozen_epochs}+LR={frozen_lr}-UnfrozenEP={unfrozen_epochs}_+LR={unfrozen_lr}-LRConfig={policy}-{timestamp}"
 
         print("CURRENT CONFIGURATION ID: " + config_id)
         cfg.work_dir = storage + ":/models/" + config_id
@@ -113,7 +117,7 @@ if __name__ == "__main__":
 
     # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
-        cfg.load_from = f"{s.path_to_models}{args.arch}.pth"
+        cfg.load_from = f"{s.path_to_models}{args.arch}.pth" if is_model_coco_pretrained else None
         cfg.optimizer.lr = frozen_lr
         cfg.model.backbone.frozen_stages = 4
         cfg.total_epochs = frozen_epochs
