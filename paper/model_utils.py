@@ -48,7 +48,7 @@ def get_config(arch_name, channels):
 
 def parse_config_and_channels_from_checkpoint_path(checkpoint_path):
     import re, os
-    matches = re.search(r"^\d[A-Za-z]+-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
+    matches = re.search(r"^\d[A-Za-z0-9]+-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
     return matches.group('arch'), int(matches.group('channels'))
 
 def get_main_channel_name(channels):
