@@ -98,6 +98,7 @@ if __name__ == "__main__":
 
         policy = cfg.lr_config.policy
         if policy == "step": policy += str(cfg.lr_config.step)
+        policy = policy.replace(" ", "")
 
         config_id = f"{args.tag}-{args.arch}_{args.channels}ch-CocoPretrained={is_model_coco_pretrained}-DS={training_dataset}_{dataset_size}-Aug={args.aug}-BS={cfg.data.imgs_per_gpu}-BNfixed={is_batchnorm_fixed}"\
                 + f"-FrozenEP={frozen_epochs}+LR={frozen_lr}-UnfrozenEP={unfrozen_epochs}_+LR={unfrozen_lr}-LRConfig={policy}-{timestamp}"
