@@ -18,14 +18,25 @@ import email_notification as outlook
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-default_experiment_tag = "2Rv2"
+default_experiment_tag = "1C"
 # default_arch_name = "fast_mask_rcnn_r101_fpn"
-# default_arch_name = "solov2_light_448_r50_fpn"
+default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "mask_rcnn_r101_fpn"
-default_arch_name = "solov2_r101_fpn"
-is_batchnorm_fixed = True
+#default_arch_name = "solov2_r101_fpn"
+is_batchnorm_fixed = False
+is_model_coco_pretrained = True
 is_aug_enabled = True
-default_channels = 3
+default_channels = 4
+
+frozen_epochs = 10
+frozen_lr = 1e-4 
+unfrozen_epochs = 20
+unfrozen_lr = 1e-5
+
+training_dataset = "sim_train_320x256" 
+validation_dataset = "real_merged_l515_640x480"
+dataset_size = "full" 
+
 TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
 
 def get_datasets(cfg):
@@ -76,16 +87,7 @@ if __name__ == "__main__":
         args = parse_args()
         print(args)
         storage = wss.storage
-
-        frozen_epochs = 10
-        frozen_lr = 1e-4 
-        unfrozen_epochs = 20
-        unfrozen_lr = 1e-5
-        training_dataset = "sim_train_320x256" 
-        validation_dataset = "real_merged_l515_640x480"
-        is_model_coco_pretrained = True
-
-        dataset_size = "full" 
+        
         if TEST:
             dataset_size = "100" 
             wss.workers = 2
