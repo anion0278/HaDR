@@ -28,10 +28,10 @@ is_model_coco_pretrained = True
 is_aug_enabled = True
 default_channels = 4
 
-frozen_epochs = 10
+frozen_epochs = 0
 frozen_lr = 1e-4 
 unfrozen_epochs = 20
-unfrozen_lr = 1e-5
+unfrozen_lr = 1e-4
 
 training_dataset = "sim_train_320x256" 
 validation_dataset = "real_merged_l515_640x480"
@@ -100,8 +100,9 @@ if __name__ == "__main__":
 
         policy = cfg.lr_config.policy
         if policy == "step": policy += str(cfg.lr_config.step)
-        policy = policy.replace(" ", "")
+        policy = policy.replace(" ", "").replace(",", "-")
 
+        # should not contain commas ,
         config_id = f"{args.tag}-{args.arch}_{args.channels}ch-CocoPretrained={is_model_coco_pretrained}-DS={training_dataset}_{dataset_size}-Aug={args.aug}-BS={cfg.data.imgs_per_gpu}-BNfixed={is_batchnorm_fixed}"\
                 + f"-FrozenEP={frozen_epochs}+LR={frozen_lr}-UnfrozenEP={unfrozen_epochs}_+LR={unfrozen_lr}-LRConfig={policy}-{timestamp}"
 
@@ -142,6 +143,7 @@ if __name__ == "__main__":
         train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
         save_checkpoint(model, cfg.work_dir + "/final.pth")  
         print("Final (full network) training finished!")
+        print("Path: " + config_id)
         outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
 
     except Exception as ex:
