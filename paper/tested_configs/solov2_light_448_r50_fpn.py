@@ -31,10 +31,7 @@ model = dict(
         sigma=0.2,
         num_grids=[40, 36, 24, 16, 12],
         ins_out_channels=128,
-        loss_ins=dict(
-            type='DiceLoss',
-            use_sigmoid=True,
-            loss_weight=3.0),
+        loss_ins=dict(loss_weight=3.0), # DiceLoss is used anyway, the only important param is weight
         loss_cate=dict(
             type='FocalLoss',
             use_sigmoid=True,
