@@ -46,6 +46,12 @@ def get_config(arch_name, channels):
     __set_config_params(cfg)
     return cfg
 
+def store_json_config(config, json_full_name):
+    config_json = config.dump()
+    f = open(json_full_name, "w")
+    f.write(config_json)
+    f.close()
+
 def parse_config_and_channels_from_checkpoint_path(checkpoint_path):
     import re, os
     matches = re.search(r"^\d[A-Za-z0-9]+-(?P<arch>\w+)_(?P<channels>\d)ch", os.path.basename(checkpoint_path))
@@ -63,8 +69,8 @@ def __set_config_params(cfg):
     set_random_seed(0, deterministic=True)
     cfg.workflow = [("train", 1), ("val", 1)] 
 
-    cfg.device_ids = range(wss.gpus)
-    cfg.gpu_ids = range(wss.gpus)
+    cfg.device_ids = list(range(wss.gpus))
+    cfg.gpu_ids = list(range(wss.gpus))
     cfg.gpus = wss.gpus
     cfg.dist_params = dict(backend='nccl')
     cfg.resume_from = None
