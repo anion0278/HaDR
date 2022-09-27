@@ -81,6 +81,19 @@ def parse_args():
         help='enable/disable augmenatations')
     return parser.parse_args()
 
+def train_stage(stage_name, cfg, frozen_backbone_stages, load_checkpoint, lr, epochs):
+    cfg.load_from = load_checkpoint
+    cfg.optimizer.lr = lr
+    cfg.total_epochs = epochs
+    cfg.model.backbone.frozen_stages = frozen_backbone_stages
+    model = build_detector(cfg.model, train_cfg = cfg.train_cfg, test_cfg = cfg.test_cfg)
+    model.CLASSES = datasets[0].CLASSES
+    utils.store_json_config(cfg, f"{cfg.work_dir}/config_{stage_name}.json") 
+    train_detector(model, datasets, cfg, distributed=False, validate=False, timestamp = timestamp)
+    latest_checkpoint = f"{cfg.work_dir}/{stage_name}.pth" 
+    save_checkpoint(model, latest_checkpoint)
+    print(f"{stage_name} training finished")
+    return latest_checkpoint
 
 if __name__ == "__main__":
     try:
@@ -119,6 +132,7 @@ if __name__ == "__main__":
 
         cfg.model.backbone.norm_eval = is_batchnorm_fixed
 
+<<<<<<< HEAD
     # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
 
         cfg.load_from = f"{s.path_to_models}{args.arch}.pth" if is_model_coco_pretrained else None
@@ -144,6 +158,24 @@ if __name__ == "__main__":
         save_checkpoint(model, cfg.work_dir + "/final.pth")  
         print("Final (full network) training finished!")
         print("Path: " + config_id)
+=======
+        # FULLY FROZEN BACKBONE: https://img1.21food.com/img/cj/2014/10/9/1412794284347212.jpg
+        intermediate_chckp = train_stage(
+            "intermediate",
+            cfg, 4,
+            f"{s.path_to_models}{args.arch}.pth" if is_model_coco_pretrained else None,
+            frozen_lr,
+            frozen_epochs)
+
+        # NON-FROZEN
+        train_stage(
+            "final",
+            cfg, -1,
+            intermediate_chckp,
+            unfrozen_lr,
+            unfrozen_epochs)
+
+>>>>>>> f9311a2e093d72777c01157adbcdc584efe74a7c
         outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
 
     except Exception as ex:

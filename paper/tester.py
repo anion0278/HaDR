@@ -272,7 +272,7 @@ def main():
                     f = open(eval_dest,"a+")
                     f.write(checkpoint_path_full + "\n")
                     eval_params = CustomizedEvalParams(dataset.coco)
-                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params)
+                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True)
                     f.close()
                 else:
                     for name in outputs[0]:

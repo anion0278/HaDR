@@ -31,10 +31,7 @@ model = dict(
         sigma=0.2,
         num_grids=[40, 36, 24, 16, 12],
         ins_out_channels=128,
-        loss_ins=dict(
-            type='DiceLoss',
-            use_sigmoid=True,
-            loss_weight=3.0),
+        loss_ins=dict(loss_weight=3.0), # DiceLoss is used anyway, the only important param is weight
         loss_cate=dict(
             type='FocalLoss',
             use_sigmoid=True,
@@ -48,7 +45,9 @@ model = dict(
             start_level=0,
             end_level=3,
             num_classes=128,
-            norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)),
+            norm_cfg=dict(type='GN', num_groups=32, requires_grad=True)), # 32 groups - is standard number for GN
+            # why GN (GroupNorm) - see: https://github.com/open-mmlab/mmdetection/issues/1468 allows training from scratch
+            # BN (BatchNorm) requires batch size to be at least 32 - see https://towardsdatascience.com/what-is-group-normalization-45fe27307be7
     )
 # training and testing settings
 train_cfg = dict()
