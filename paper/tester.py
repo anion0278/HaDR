@@ -270,7 +270,7 @@ def main():
                     result_files = results2json_segm(dataset, outputs, args.out)
                     eval_dest = s.path_to_models + "evals.txt"
                     f = open(eval_dest,"a+")
-                    f.write(checkpoint_path_full + "\n")
+                    f.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
                     eval_params = CustomizedEvalParams(dataset.coco)
                     coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True)
                     f.close()
