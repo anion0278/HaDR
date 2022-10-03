@@ -8,7 +8,7 @@ import cv2
 from ..registry import PIPELINES
 
 @PIPELINES.register_module
-class LoadRgbdImageFromFile(object):
+class LoadBgrdImageFromFile(object):
 
     def __init__(self, to_float32=False, color_type='color'):
         self.to_float32 = to_float32
@@ -20,10 +20,10 @@ class LoadRgbdImageFromFile(object):
                                 results['img_info']['filename'])
         else:
             filename = results['img_info']['filename']
-        img_rgb = mmcv.imread(filename, self.color_type)
+        img_bgr = mmcv.imread(filename, self.color_type) # CV loads img in BGR, checked 
         img_d = mmcv.imread(filename.replace("color","depth"), "grayscale")
         img_d = img_d[..., np.newaxis]
-        img_full = np.concatenate([img_rgb, img_d], axis=2)
+        img_full = np.concatenate([img_bgr, img_d], axis=2) # BGR-D
 
         if self.to_float32:
             img_full = img_full.astype(np.float32)
@@ -38,15 +38,15 @@ class LoadRgbdImageFromFile(object):
             self.__class__.__name__, self.to_float32, self.color_type)
 
 @PIPELINES.register_module
-class ConvertRgbdToBgrd(object):
+class ConvertBgrdToRgbd(object):
 
     def __init__(self):
         pass
 
     def __call__(self, results):
-        img = results['img']
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA) 
-        results['img'] = img
+        img = results['img'] # BGR-D  
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2RGBA)  
+        results['img'] = img # RGB-D
         return results
 
     def __repr__(self):
