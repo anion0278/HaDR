@@ -52,8 +52,6 @@ val_pipeline = [
         meta_keys=('filename','ori_shape', 'img_shape', 'pad_shape', 'img_norm_cfg', 'scale_factor')),
 ]
 data = dict(
-    imgs_per_gpu=8,
-    workers_per_gpu=4,
     train=dict(pipeline=train_pipeline),
     val=dict(pipeline=val_pipeline),
     test=dict(pipeline=test_pipeline))
