@@ -33,8 +33,8 @@ def process_img(sample_id, index, files_len):
     sample_id = sample_id.replace("user-", "hand_")
 
     depth_img.save(os.path.join(dataset_dir, "depth_formatted", sample_id))
-    cv2.imwrite(os.path.join(dataset_dir, "mask_formatted", sample_id.replace(".png", "_i2.png")),mask_l)
-    cv2.imwrite(os.path.join(dataset_dir, "mask_formatted", sample_id.replace(".png", "_i1.png")),mask_r)
+    cv2.imwrite(os.path.join(dataset_dir, "mask_formatted", sample_id.replace(".png", "_i1.png")),mask_l)
+    cv2.imwrite(os.path.join(dataset_dir, "mask_formatted", sample_id.replace(".png", "_i2.png")),mask_r)
 
     import matplotlib.pyplot as plt
     fig = plt.figure(1)
