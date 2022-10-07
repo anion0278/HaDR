@@ -11,17 +11,17 @@ batch_size = 8
 
 # model_input_size = (256, 320) #TODO
 
-# from custom train dataset
+# from custom train dataset - RGB-D
 sim_train_mean=[96.924, 90.654, 88.884, 40.039] 
-sim_train_std=[69.349, 66.891, 66.718, 48.845]
+sim_train_std_rgbd=[69.349, 66.891, 66.718, 48.845]
 
-# from custom val dataset
+# from custom val dataset - RGB-D
 sim_val_mean=[102.951, 96.150, 98.884, 53.006] 
-sim_val_std=[68.324, 66.890, 68.474, 49.755]
+sim_val_std_rgbd=[68.324, 66.890, 68.474, 49.755]
 
-# from coco
-test_train_mean=[123.675, 116.28, 103.53, 35.3792] 
-test_train_std=[58.395, 57.12, 57.375, 45.978]
+# from COCO - RGB-D, represents real-life color distribution. Depth channel is obtained from custom real-cam dataset
+test_train_mean_rgbd=[123.675, 116.28, 103.53, 35.3792] 
+test_train_std_rgbd=[58.395, 57.12, 57.375, 45.978]
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -42,19 +42,19 @@ def add_packages_paths():
 
 def get_norm_params(input_channels, mode):
     if mode == "train":
-        mean = sim_train_std
-        std = sim_train_std
+        mean_rgbd = sim_train_std_rgbd
+        std_rgbd = sim_train_std_rgbd
     if mode == "val":
-        mean = sim_val_std
-        std = sim_val_std
+        mean_rgbd = sim_val_std_rgbd
+        std_rgbd = sim_val_std_rgbd
     if mode == "test":
-        mean = test_train_mean
-        std = test_train_std
+        mean_rgbd = test_train_mean_rgbd
+        std_rgbd = test_train_std_rgbd
 
     options = {
-        1: dict(mean=[mean[3]], std=[std[3]], to_rgb=False),
-        3: dict(mean=mean[0:3], std=std[0:3], to_rgb=True),
-        4: dict(mean=mean, std=std, to_rgb=False),
+        1: dict(mean=[mean_rgbd[3]], std=[std_rgbd[3]], to_rgb=False),
+        3: dict(mean=mean_rgbd[0:3], std=std_rgbd[0:3], to_rgb=True),
+        4: dict(mean=mean_rgbd, std=std_rgbd, to_rgb=False),
     }
     return options[input_channels]
 
