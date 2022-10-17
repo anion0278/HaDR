@@ -67,7 +67,6 @@ def process_img(sample_id, subset, id, files_len, dataset_dir):
     except Exception as ex:
         pass # some images have invalid meta
 
-os.environ["OPENCV_IO_ENABLE_OPENEXR"]="1"
 for subset in [ "train","test", "val"]:
     samples = os.listdir(os.path.join(dataset_dir, subset, "depth"))
     samples_len = int(len(samples))
