@@ -19,13 +19,12 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 default_experiment_tag = "1C"
-# default_arch_name = "fast_mask_rcnn_r101_fpn"
-default_arch_name = "solov2_light_448_r50_fpn"
+# default_arch_name = "solov2_light_448_r50_fpn"
 # default_arch_name = "mask_rcnn_r101_fpn"
-#default_arch_name = "solov2_r101_fpn"
+default_arch_name = "solov2_r101_fpn"
 is_batchnorm_fixed = False
 is_model_coco_pretrained = True
-is_aug_enabled = True
+is_aug_enabled = False
 default_channels = 4
 
 frozen_epochs = 10
