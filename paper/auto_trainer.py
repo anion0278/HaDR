@@ -8,7 +8,7 @@ archs = {
 
 ds_3rd_p = "third-party/"
 
-datasets = {ds_3rd_p+"real_merged_l515_640x480", ds_3rd_p+"egohands", ds_3rd_p+"densehands", ds_3rd_p+"rhd", ds_3rd_p+"handseg"}
+datasets = {"sim_train_320x256", ds_3rd_p+"egohands", ds_3rd_p+"densehands", ds_3rd_p+"rhd", ds_3rd_p+"handseg"}
 
 data_configs = {
     # "A": (1, True), # (channels, is_aug_enabled)

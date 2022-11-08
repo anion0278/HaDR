@@ -12,12 +12,12 @@ batch_size = 16
 # model_input_size = (256, 320) #TODO
 
 # from custom train dataset - RGB-D
-sim_train_mean=[96.924, 90.654, 88.884, 40.039] 
-sim_train_std_rgbd=[69.349, 66.891, 66.718, 48.845]
+sim_train_mean=[96.910, 91.121, 89.422, 41.509] 
+sim_train_std_rgbd=[69.191, 66.900, 66.912, 49.852]
 
 # from custom val dataset - RGB-D
-sim_val_mean=[102.951, 96.150, 98.884, 53.006] 
-sim_val_std_rgbd=[68.324, 66.890, 68.474, 49.755]
+sim_val_mean=[102.000, 96.496, 98.664, 53.955] 
+sim_val_std_rgbd=[68.137, 67.044, 68.297, 49.790]
 
 # from COCO - RGB-D, represents real-life color distribution. Depth channel is obtained from custom real-cam dataset
 test_train_mean_rgbd=[123.675, 116.28, 103.53, 35.3792] 
