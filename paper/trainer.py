@@ -13,7 +13,7 @@ from mmdet.apis import train_detector
 import ws_specific_settings as wss
 import model_utils as utils
 import os, argparse, traceback
-import email_notification as outlook
+import email_notification as outlook 
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
@@ -28,10 +28,10 @@ is_model_coco_pretrained = True
 is_aug_enabled = True
 default_channels = 4
 
-frozen_epochs = 0
-frozen_lr = 1e-4 
+frozen_epochs = 10
+frozen_lr = 1e-3 
 unfrozen_epochs = 20
-unfrozen_lr = 1e-4
+unfrozen_lr = 1e-5
 
 training_dataset = "sim_train_320x256" 
 validation_dataset = "real_merged_l515_640x480"
@@ -48,9 +48,7 @@ def get_datasets(cfg):
 def manage_aug(cfg, is_aug_enabled):
     if not is_aug_enabled: 
         import copy
-        # train_norm = cfg.data.train["pipeline"][3]
         cfg.data.train = copy.deepcopy(cfg.data.val)
-        # cfg.data.train["pipeline"][3] = train_norm
     return cfg
  
 def parse_args():
@@ -67,6 +65,12 @@ def parse_args():
         required = False,
         default=default_arch_name,
         help='architecture config name')
+    parser.add_argument(
+        '--ds',
+        type=str,
+        required = False,
+        default=training_dataset,
+        help='dataset name')
     parser.add_argument(
         '--channels', 
         type=int, 
@@ -100,6 +104,7 @@ if __name__ == "__main__":
         args = parse_args()
         print(args)
         storage = wss.storage
+        training_dataset = args.ds
         
         if TEST:
             dataset_size = "100" 
@@ -115,8 +120,9 @@ if __name__ == "__main__":
         if policy == "step": policy += str(cfg.lr_config.step)
         policy = policy.replace(" ", "").replace(",", "-")
 
+        dataset_name = training_dataset.replace("/","-")
         # should not contain commas ,
-        config_id = f"{args.tag}-{args.arch}_{args.channels}ch-CocoPretrained={is_model_coco_pretrained}-DS={training_dataset}_{dataset_size}-Aug={args.aug}-BS={cfg.data.imgs_per_gpu}-BNfixed={is_batchnorm_fixed}"\
+        config_id = f"{args.tag}-{args.arch}_{args.channels}ch-CocoPretrained={is_model_coco_pretrained}-DS={dataset_name}_{dataset_size}-Aug={args.aug}-BS={cfg.data.imgs_per_gpu}-BNfixed={is_batchnorm_fixed}"\
                 + f"-FrozenEP={frozen_epochs}+LR={frozen_lr}-UnfrozenEP={unfrozen_epochs}_+LR={unfrozen_lr}-LRConfig={policy}-{timestamp}"
 
         print("CURRENT CONFIGURATION ID: " + config_id)
