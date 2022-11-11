@@ -33,7 +33,7 @@ class RgbdCamera():
             self.colorizer = rs.colorizer()
             self.colorizer.set_option(rs.option.visual_preset,1)
             self.colorizer.set_option(rs.option.min_distance,0.2)        
-            self.colorizer.set_option(rs.option.max_distance,1.05)
+            self.colorizer.set_option(rs.option.max_distance,1.0)
             self.colorizer.set_option(rs.option.color_scheme,2)
             self.colorizer.set_option(rs.option.histogram_equalization_enabled,0)
 
