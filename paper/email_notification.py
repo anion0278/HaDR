@@ -7,7 +7,7 @@ def send_email(subject, text, address):
     mail.To = address
     mail.Subject = subject
     mail.Body = text
-    mail.HTMLBody = f'<h2>{text}</h2>'
+    mail.HTMLBody = f'<pre>{text}</pre>'
     mail.Send()
     time.sleep(1)
     print("Sent email to:" + address)

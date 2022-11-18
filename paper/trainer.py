@@ -28,15 +28,16 @@ is_aug_enabled = False
 default_channels = 4
 
 frozen_epochs = 10
-frozen_lr = 1e-3 
+frozen_lr = 1e-2 
 unfrozen_epochs = 20
-unfrozen_lr = 1e-5
+unfrozen_lr = 1e-2
 
 training_dataset = "sim_train_320x256" 
 validation_dataset = "real_merged_l515_640x480"
 dataset_size = "full" 
 
 TEST = False  # if True runs only 100 same images from validation dataset for BOTH TRAIN and VAL
+is_evaluation_enabled = True
 
 def get_datasets(cfg):
     datasets = [build_dataset(cfg.data.train), build_dataset(cfg.data.val)]
@@ -84,6 +85,14 @@ def parse_args():
         help='enable/disable augmenatations')
     return parser.parse_args()
 
+def evaluate(work_dir):
+    from subprocess import run
+    import re
+    command = f"python paper/tester.py --checkpoint_path {work_dir} --eval segm --out {work_dir}\out.pkl"
+    output = run(command, capture_output=True).stdout
+    print(command)
+    return re.sub("index created[\s\S]*Writing results to", "", output.decode('ascii'), count=0, flags=0)
+
 def train_stage(stage_name, cfg, frozen_backbone_stages, load_checkpoint, lr, epochs):
     cfg.load_from = load_checkpoint
     cfg.optimizer.lr = lr
@@ -108,6 +117,8 @@ if __name__ == "__main__":
         if TEST:
             dataset_size = "100" 
             wss.workers = 2
+            unfrozen_epochs = 1
+            frozen_epochs = 1
         train_dataset_path = s.path_to_datasets + training_dataset
         val_dataset_path =  s.path_to_datasets + validation_dataset
         main_channel =  utils.get_main_channel_name(args.channels)
@@ -153,7 +164,12 @@ if __name__ == "__main__":
             unfrozen_lr,
             unfrozen_epochs)
 
-        outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
+        if is_evaluation_enabled:
+            filtered_output = evaluate(cfg.work_dir)
+            outlook.send_email("HGR: Training finished!", 
+                                f"Finished training: {config_id} \n" + filtered_output, 
+                                wss.email_recipients)
+        else: outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
 
     except Exception as ex:
         error_desc = str(ex) + "\n"+ "".join(traceback.TracebackException.from_exception(ex).format())

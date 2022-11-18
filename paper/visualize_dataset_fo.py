@@ -5,7 +5,7 @@ import fiftyone as fo
 
 if __name__ == "__main__":
     data_path = "D:\datasets\RHD/depth"
-    labels_path = "D:\datasets\RHD/instances_hands_100.json"
+    labels_path = "D:\datasets\RHD/instances_hands_full.json"
     dataset_type = fo.types.COCODetectionDataset
     dataset = fo.Dataset.from_dir(
         data_path=data_path,
