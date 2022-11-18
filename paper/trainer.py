@@ -27,7 +27,7 @@ is_model_coco_pretrained = True
 is_aug_enabled = False
 default_channels = 4
 
-frozen_epochs = 10
+frozen_epochs = 0
 frozen_lr = 1e-2 
 unfrozen_epochs = 20
 unfrozen_lr = 1e-2
