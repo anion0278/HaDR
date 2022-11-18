@@ -7,23 +7,35 @@ archs = {
     }
 
 ds_3rd_p = "third-party/"
-
-datasets = ["sim_train_320x256", ds_3rd_p+"egohands", ds_3rd_p+"densehands", ds_3rd_p+"rhd", ds_3rd_p+"handseg"]
+our_ds = "sim_train_320x256"
 
 data_configs = {
-    # "A": (1, True), # (channels, is_aug_enabled)
-    # "B": (3, True),
-    # "C": (4, True),
-    "X": (1, False),
-    "Y": (3, False),
-    "Z": (4, False),
+    "X": (1, False, our_ds),
+    "Y": (3, False, our_ds),
+    "Z": (4, False, our_ds),
+
+    "E": (3, False, ds_3rd_p+"egohands"),
+
+    "H": (1, False, ds_3rd_p+"handseg"),
+
+    "D": (1, False, ds_3rd_p+"densehands"),
+    "D": (3, False, ds_3rd_p+"densehands"),
+    "D": (4, False, ds_3rd_p+"densehands"),
+
+    "O": (1, False, ds_3rd_p+"obman"),
+    "O": (3, False, ds_3rd_p+"obman"),
+    "O": (4, False, ds_3rd_p+"obman"),
+
+    "R": (1, False, ds_3rd_p+"RHD"),
+    "R": (3, False, ds_3rd_p+"RHD"),
+    "R": (4, False, ds_3rd_p+"RHD"),
     }
 
-for tag_name, config in data_configs.items():
+for tag_name, config, ds in data_configs.items():
     for tag_id, arch in archs.items():
-        for ds in datasets:
             channels, is_aug_enabled = config
             command = f"python paper/trainer.py --tag {tag_id + tag_name} --arch {arch} --channels {channels} --aug {is_aug_enabled} --ds {ds}"
             print(command)
             os.system(command)
+
 
