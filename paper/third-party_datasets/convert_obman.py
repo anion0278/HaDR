@@ -7,9 +7,11 @@ import pickle
 import os
 from joblib import Parallel,delayed
 
+min_range = 0.2
+max_range = 1
 
 # two hands 00149537.png
-dataset_dir = "D:\datasets\obman"
+dataset_dir = "D:\datasets\obman-orig"
 
 class_name = "hand"
 
@@ -24,9 +26,11 @@ def process_img(sample_id, subset, id, files_len, dataset_dir):
             meta = pickle.load(openfile)
         depth_m = (depth[:, :, 0] - 1) / 254 * (meta["depth_min"] - meta["depth_max"]) + meta["depth_max"]
         depth_over_limit = abs(depth_m - meta["depth_min"])
-        depth_m[depth_over_limit < 0.005] = 1
-        depth_m[depth_m>1] = 1
-        depth_byte = 255-depth_m * 255
+        depth_m[depth_over_limit < 0.005] = max_range
+        depth_m[depth_m > max_range ] = max_range
+        depth_m[depth_m < min_range] = min_range
+        depth_m = (depth_m - min_range) / (max_range - min_range)
+        depth_byte = 255 - depth_m * 255
 
         #class 20 - forehand
         #class 1..20 - arm parts
@@ -67,7 +71,7 @@ def process_img(sample_id, subset, id, files_len, dataset_dir):
     except Exception as ex:
         pass # some images have invalid meta
 
-for subset in [ "train","test", "val"]:
+for subset in [ "test","train", "val"]:
     samples = os.listdir(os.path.join(dataset_dir, subset, "depth"))
     samples_len = int(len(samples))
-    Parallel(n_jobs=5)(delayed(process_img)(samples[sample_id], subset, sample_id, samples_len, dataset_dir) for sample_id in range(samples_len))
+    Parallel(n_jobs=1)(delayed(process_img)(samples[sample_id], subset, sample_id, samples_len, dataset_dir) for sample_id in range(samples_len))

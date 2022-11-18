@@ -9,6 +9,9 @@ from joblib import Parallel,delayed
 # SEE https://stackoverflow.com/questions/67474451/why-does-cv2-imread-output-a-matrix-of-zeros-for-a-32-bit-image-even-when-using
 # AND https://handtracker.mpi-inf.mpg.de/data/SynthHands/README.txt
 
+min_range = 0.2
+max_range = 1
+
 dataset_dir = "D:\datasets\Handseg"
 
 class_name = "hand"
@@ -25,9 +28,11 @@ def process_img(sample_id, index, files_len):
     depth = np.array(Image.open(os.path.join(dataset_dir, "images", class_name+"_"+sample_id)))
     depth = depth.astype(np.float32)
     depth /= 10000.0
-    depth[depth > 1.0] = 1.0
-    depth = depth*255
-    depth[depth>0]=255-depth[depth>0]
+    depth[depth > max_range] = max_range
+    depth[depth < min_range] = min_range
+    depth = (depth - min_range) / (max_range - min_range)
+    depth = depth * 255
+    depth[depth>0]= 255 - depth[depth>0]
     depth_img = Image.fromarray(np.uint8(depth),mode="L")
 
     sample_id = sample_id.replace("user-", "hand_")

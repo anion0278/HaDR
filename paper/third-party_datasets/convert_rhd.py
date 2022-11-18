@@ -18,6 +18,8 @@ import imageio, cv2
 from joblib import Parallel,delayed
 import time
 
+min_range = 0.2
+max_range = 1
 
 subset = "evaluation"
 set_path = 'D:/datasets/RHD_published_v2/' + subset
@@ -41,8 +43,10 @@ def process_img(sample_id, anno, items_len):
 
     # process rgb coded depth into float: top bits are stored in red, bottom in green channel
     depth = depth_two_uint8_to_float(depth[:, :, 0], depth[:, :, 1])  # depth in meters from the camera
-    depth[depth > 1.0] = 1.0
-    depth = ((1.0-depth) * 255.0).astype("uint8")
+    depth[depth > max_range] = max_range
+    depth_m[depth_m < min_range] = min_range
+    depth_m = (depth_m - min_range) / (max_range - min_range)
+    depth = (255 - depth * 255.0).astype("uint8")
 
     # 0-bg, 1 - body, 2-17 left hand, 18-33 right hand
     mask[mask == 1] = 0

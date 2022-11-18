@@ -9,6 +9,9 @@ from joblib import Parallel,delayed
 # SEE https://stackoverflow.com/questions/67474451/why-does-cv2-imread-output-a-matrix-of-zeros-for-a-32-bit-image-even-when-using
 # AND https://handtracker.mpi-inf.mpg.de/data/SynthHands/README.txt
 
+min_range = 0.2
+max_range = 1
+
 dataset_dir = "D:\datasets\DenseHands"
 
 class_name = "hand"
@@ -34,7 +37,9 @@ def process_img(sample_id, files_len, subset_path, subset_names_full):
         depth_cv = depth_pil_cv.view(np.int32)
         depth_mm = depth_cv.astype(np.uint16)
         depth_meters = depth_mm / 1000.0 # mm to m
-        depth_meters[depth_meters > 1] = 1
+        depth_meters[depth_meters > max_range] = max_range
+        depth_meters[depth_meters < min_range] = min_range
+        depth_meters = (depth_meters - min_range) / (max_range - min_range)
         depth_byte = (255 - depth_meters * 255).astype(np.uint8)
 
         cv2.imwrite(os.path.join(dataset_dir, "mask_formatted", f"{class_name}_{subset_names_full}_i1.png"), rgb_mask_l)
