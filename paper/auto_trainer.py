@@ -15,8 +15,6 @@ data_configs = {
     "H": (1, False, ds_3rd_p+"handseg"),
 
     "D": (1, False, ds_3rd_p+"densehands"),
-    "D": (3, False, ds_3rd_p+"densehands"),
-    "D": (4, False, ds_3rd_p+"densehands"),
 
     "O": (1, False, ds_3rd_p+"obman"),
     "O": (3, False, ds_3rd_p+"obman"),
