@@ -10,10 +10,6 @@ ds_3rd_p = "third-party/"
 our_ds = "sim_train_320x256"
 
 data_configs = {
-    "X": (1, False, our_ds),
-    "Y": (3, False, our_ds),
-    "Z": (4, False, our_ds),
-
     "E": (3, False, ds_3rd_p+"egohands"),
 
     "H": (1, False, ds_3rd_p+"handseg"),
@@ -29,6 +25,10 @@ data_configs = {
     "R": (1, False, ds_3rd_p+"RHD"),
     "R": (3, False, ds_3rd_p+"RHD"),
     "R": (4, False, ds_3rd_p+"RHD"),
+
+    "X": (1, False, our_ds),
+    "Y": (3, False, our_ds),
+    "Z": (4, False, our_ds),
     }
 
 for tag_name, config, ds in data_configs.items():
