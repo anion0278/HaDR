@@ -172,6 +172,6 @@ if __name__ == "__main__":
         else: outlook.send_email("HGR: Training finished!", f"Finished training: {config_id}", wss.email_recipients)
 
     except Exception as ex:
-        error_desc = str(ex) + "\n"+ "".join(traceback.TracebackException.from_exception(ex).format())
+        error_desc = config_id + "\n" + str(ex) + "\n"+ "".join(traceback.TracebackException.from_exception(ex).format())
         print(f"Exception occured: {error_desc}")
         outlook.send_email("HGR: Exception during training!", error_desc, wss.email_recipients)
