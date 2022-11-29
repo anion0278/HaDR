@@ -108,6 +108,7 @@ def train_stage(stage_name, cfg, frozen_backbone_stages, load_checkpoint, lr, ep
     return latest_checkpoint
 
 if __name__ == "__main__":
+    config_id=""
     try:
         args = parse_args()
         print(args)
