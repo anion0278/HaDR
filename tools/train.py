@@ -1,4 +1,7 @@
 from __future__ import division
+import os, sys
+path = os.path.abspath("./modified_packges")
+sys.path.insert(0,path)
 import argparse
 import os
 import os.path as osp
@@ -110,6 +113,7 @@ def main():
             mmdet_version=__version__,
             config=cfg.text,
             CLASSES=datasets[0].CLASSES)
+    cfg.checkpoint_config.create_symlink=False
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
     train_detector(
