@@ -197,6 +197,7 @@ def show_result(img,
         for i, bbox in enumerate(bbox_result)
     ]
     labels = np.concatenate(labels)
+    if len(labels) == 0: print("no labels"); return
     # draw segmentation masks
     if segm_result is not None:
         segms = mmcv.concat_list(segm_result)

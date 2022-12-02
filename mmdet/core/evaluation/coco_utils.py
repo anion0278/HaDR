@@ -153,7 +153,7 @@ def det2json(dataset, results):
         img_id = dataset.img_ids[idx]
         result = results[idx]
         for label in range(len(result)):
-            bboxes = result[label]
+            bboxes = np.array(result[label])
             for i in range(bboxes.shape[0]):
                 data = dict()
                 data['image_id'] = img_id
@@ -170,7 +170,13 @@ def segm2json(dataset, results):
     for idx in range(len(dataset)):
         img_id = dataset.img_ids[idx]
         det, seg = results[idx]
-        for label in range(len(det)):
+
+        assert len(det) == len(seg), "Number of detected bboxes is different from number of segmentation instances!"
+
+        if len(det) != len(dataset.cat_ids):
+            print("Length of categories in Dataset is different from model's! Evalutating only the Dataset categories.")
+
+        for label in range(len(dataset.cat_ids)): # evaluates only the categories that are in current Dataset
             # bbox results
             bboxes = det[label]
             for i in range(bboxes.shape[0]):

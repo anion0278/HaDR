@@ -1,3 +1,5 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # for skimage.measure
 import argparse
 import os
 import os.path as osp
@@ -22,6 +24,8 @@ import sys
 import ws_specific_settings as wss
 import model_utils as utils
 import common_settings as s
+from skimage.measure import label, regionprops, find_contours
+import cv2
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
@@ -32,6 +36,62 @@ eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
     eval_dataset_annotations = "/instances_hands_100.json" 
     wss.workers = 1
+
+def mask_to_bbox(mask):
+    x, y, w, h = cv2.boundingRect(mask)
+    # xy, xy2 = (x,y), (x+w,y+h)
+    # m = mask
+    # m = cv2.rectangle(m, xy, xy2, (1,1,1), 1)
+    # import matplotlib.pyplot as plt
+    # fig = plt.figure(1)
+    # ax1 = fig.add_subplot(221)
+    # ax1.imshow(m)
+    # plt.show()
+    return x, y, x+w, y+h
+
+def get_masks(result, num_classes=80):
+    assert len(result) == 1
+    masks = [[] for _ in range(num_classes)]
+    bboxes = [[] for _ in range(num_classes)]
+    for cur_result in result:
+        if cur_result is None: break
+        seg_pred = cur_result[0].cpu().numpy().astype(np.uint8)
+        cate_label = cur_result[1].cpu().numpy().astype(np.int)
+        cate_score = cur_result[2].cpu().numpy().astype(np.float)
+        num_ins = seg_pred.shape[0]
+        for idx in range(num_ins):
+            class_label_id = cate_label[idx]
+            if class_label_id >= num_classes: continue
+            cur_mask = seg_pred[idx, ...]
+            rle = mask_util.encode(np.array(cur_mask[:, :, np.newaxis], order="F"))[0]
+            bbox_with_score = [*mask_to_bbox(cur_mask[:, :]), cate_score[idx]] # same way as mask rcnn
+            bboxes[class_label_id].append(bbox_with_score) 
+            masks[class_label_id].append(rle)
+    return np.array(bboxes), masks
+
+
+def single_gpu_test(model, data_loader, show=False, verbose=True):
+    model.eval()
+    results = []
+    dataset = data_loader.dataset
+    num_classes = len(dataset.CLASSES)
+    prog_bar = mmcv.ProgressBar(len(dataset))
+    for i, data in enumerate(data_loader):
+        with torch.no_grad():
+            seg_result = model(return_loss=False, rescale=not show, **data)
+
+        if len(seg_result) == 1: # for SOLO
+            segmentation_data = seg_result
+            bboxes,masks = get_masks(segmentation_data, num_classes=num_classes)
+            seg_result = (bboxes, masks)
+
+        results.append(seg_result)
+        
+        batch_size = data["img"][0].size(0)
+        for _ in range(batch_size):
+            prog_bar.update()
+    return results
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
@@ -47,7 +107,7 @@ def parse_args():
         nargs="+",
         choices=["proposal", "proposal_fast", "bbox", "segm", "keypoints"],
         help="eval types",
-        default=["segm"])
+        default=["segm", "bbox"])
     parser.add_argument("--show", action="store_true", help="show results")
     parser.add_argument("--tmpdir", help="tmp dir for writing some results")
     parser.add_argument(
@@ -60,121 +120,6 @@ def parse_args():
     if "LOCAL_RANK" not in os.environ:
         os.environ["LOCAL_RANK"] = str(args.local_rank)
     return args
-
-def get_masks(result, num_classes=80):
-    if (len(result)>1): # for Mask RCNN only
-        masks = [[]]
-        for idx in range(len(result[1][0])):
-            rle = result[1][0][idx]
-            rst = (rle, result[0][0][idx][4])
-            masks[0].append(rst)                #hardcoded single category
-        return masks
-    else: # for SOLO
-        for cur_result in result:
-            masks = [[] for _ in range(num_classes)]
-            if cur_result is None:
-                return masks
-            seg_pred = cur_result[0].cpu().numpy().astype(np.uint8)
-            cate_label = cur_result[1].cpu().numpy().astype(np.int)
-            cate_score = cur_result[2].cpu().numpy().astype(np.float)
-            num_ins = seg_pred.shape[0]
-            for idx in range(num_ins):
-                class_label_id = cate_label[idx]
-                if class_label_id >= num_classes: continue
-                cur_mask = seg_pred[idx, ...]
-                rle = mask_util.encode(
-                    np.array(cur_mask[:, :, np.newaxis], order="F"))[0]
-                rst = (rle, cate_score[idx])
-                masks[class_label_id].append(rst)
-            return masks
-
-
-def single_gpu_test(model, data_loader, show=False, verbose=True):
-    model.eval()
-    results = []
-    dataset = data_loader.dataset
-    num_classes = len(dataset.CLASSES)
-    prog_bar = mmcv.ProgressBar(len(dataset))
-    for i, data in enumerate(data_loader):
-        with torch.no_grad():
-            seg_result = model(return_loss=False, rescale=not show, **data)
-
-        result = get_masks(seg_result, num_classes=num_classes)
-        results.append(result)
-            
-        batch_size = data["img"][0].size(0)
-        for _ in range(batch_size):
-            prog_bar.update()
-    return results
-
-
-def multi_gpu_test(model, data_loader, tmpdir=None):
-    model.eval()
-    results = []
-    dataset = data_loader.dataset
-    num_classes = len(dataset.CLASSES)
-
-    rank, world_size = get_dist_info()
-    if rank == 0:
-        prog_bar = mmcv.ProgressBar(len(dataset))
-    for i, data in enumerate(data_loader):
-        with torch.no_grad():
-            seg_result = model(return_loss=False, rescale=True, **data)
-
-        result = get_masks(seg_result, num_classes=num_classes)
-        results.append(result)
-
-        if rank == 0:
-            batch_size = data["img"][0].size(0)
-            for _ in range(batch_size * world_size):
-                prog_bar.update()
-
-    # collect results from all ranks
-    results = collect_results(results, len(dataset), tmpdir)
-    return results
-
-
-def collect_results(result_part, size, tmpdir=None):
-    rank, world_size = get_dist_info()
-    # create a tmp dir if it is not specified
-    if tmpdir is None:
-        MAX_LEN = 512
-        # 32 is whitespace
-        dir_tensor = torch.full((MAX_LEN, ),
-                                32,
-                                dtype=torch.uint8,
-                                device="cuda")
-        if rank == 0:
-            tmpdir = tempfile.mkdtemp()
-            tmpdir = torch.tensor(
-                bytearray(tmpdir.encode()), dtype=torch.uint8, device="cuda")
-            dir_tensor[:len(tmpdir)] = tmpdir
-        dist.broadcast(dir_tensor, 0)
-        tmpdir = dir_tensor.cpu().numpy().tobytes().decode().rstrip()
-    else:
-        mmcv.mkdir_or_exist(tmpdir)
-    # dump the part result to the dir
-    mmcv.dump(result_part, osp.join(tmpdir, "part_{}.pkl".format(rank)))
-    dist.barrier()
-    # collect all parts
-    if rank != 0:
-        return None
-    else:
-        # load results of all parts from tmp dir
-        part_list = []
-        for i in range(world_size):
-            part_file = osp.join(tmpdir, "part_{}.pkl".format(i))
-            part_list.append(mmcv.load(part_file))
-        # sort the results
-        ordered_results = []
-        for res in zip(*part_list):
-            ordered_results.extend(list(res))
-        # the dataloader may pad some samples
-        ordered_results = ordered_results[:size]
-        # remove tmp dir
-        shutil.rmtree(tmpdir)
-        return ordered_results
-
 
 def main():
     print(sys.argv)
@@ -253,12 +198,8 @@ def main():
     else:
         model.CLASSES = dataset.CLASSES
 
-    if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader)
-    else:
-        model = MMDistributedDataParallel(model.cuda())
-        outputs = multi_gpu_test(model, data_loader, args.tmpdir)
+    model = MMDataParallel(model, device_ids=[0])
+    outputs = single_gpu_test(model, data_loader)
 
     rank, _ = get_dist_info()
     if args.out and rank == 0:
@@ -272,7 +213,7 @@ def main():
                 coco_eval(result_file, eval_types, dataset.coco)
             else:
                 if not isinstance(outputs[0], dict): # Segmentation
-                    result_files = results2json_segm(dataset, outputs, args.out)
+                    result_files = results2json(dataset, outputs, args.out)
                     eval_dest = s.path_to_models + "evals.txt"
                     f = open(eval_dest,"a+")
                     f.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
