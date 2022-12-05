@@ -62,14 +62,14 @@ def parse_args():
     return args
 
 def get_masks(result, num_classes=80):
-    if (len(result)>1):
+    if (len(result)>1): # for Mask RCNN only
         masks = [[]]
         for idx in range(len(result[1][0])):
             rle = result[1][0][idx]
             rst = (rle, result[0][0][idx][4])
             masks[0].append(rst)                #hardcoded single category
         return masks
-    else:
+    else: # for SOLO
         for cur_result in result:
             masks = [[] for _ in range(num_classes)]
             if cur_result is None:
@@ -215,8 +215,13 @@ def main():
     PREFIX = os.path.abspath(eval_dataset)
     annotations = eval_dataset_annotations
     from os.path import exists
+    
+    # evaluating pretrained COCO model on ARMS datasets, because it has only "Person" class
     arms_annotations = eval_dataset_annotations.replace("hands", "arms")
-    if cfg.model.bbox_head.num_classes == 81 and exists(PREFIX + arms_annotations): annotations = arms_annotations # evaluating pretrained COCO model on ARMS datasets, because it has only "Person" class
+    if cfg.model.bbox_head.num_classes == 81 and exists(PREFIX + arms_annotations): 
+        annotations = arms_annotations
+        print("Eval ARMS")
+    
     cfg.data.test.ann_file = PREFIX + annotations
     cfg.data.test.img_prefix = f"{PREFIX}/{utils.get_main_channel_name(cfg.model.backbone.in_channels)}/"
     cfg.data.test.type =  "CocoDataset"
