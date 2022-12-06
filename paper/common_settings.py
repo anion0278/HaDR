@@ -6,18 +6,18 @@ path_to_datasets= wss.storage + ":/datasets/"
 path_to_models= wss.storage + ":/models/"
 path_to_configs_formatted = "./paper/tested_configs/%s.py"
 tested_checkpoint_file_name = "final.pth"
-visualization_threshold = 0.2
-batch_size = 16
+visualization_threshold = 0.1
+batch_size = 4
 
 # model_input_size = (256, 320) #TODO
 
 # from custom train dataset - RGB-D
-sim_train_mean=[96.910, 91.121, 89.422, 41.509] 
-sim_train_std_rgbd=[69.191, 66.900, 66.912, 49.852]
+sim_train_mean=[99.715, 97.735, 97.013, 57.901] 
+sim_train_std_rgbd=[67.947, 67.557, 67.676, 47.075]
 
 # from custom val dataset - RGB-D
-sim_val_mean=[102.000, 96.496, 98.664, 53.955] 
-sim_val_std_rgbd=[68.137, 67.044, 68.297, 49.790]
+sim_val_mean=[99.321, 97.284, 96.318, 58.189] 
+sim_val_std_rgbd=[67.814, 67.518, 67.576, 47.186]
 
 # from COCO - RGB-D, represents real-life color distribution. Depth channel is obtained from custom real-cam dataset
 test_train_mean_rgbd=[123.675, 116.28, 103.53, 35.3792] 
@@ -70,7 +70,7 @@ class DropDownMenuChoice():
 
     def show_options(self, options, title, default_value=None):
         self.root = Tk()
-        self.root.geometry("200x100")
+        self.root.geometry("200x180")
         self.root.title(title)
         self.root.attributes("-toolwindow", True)
         self.root.eval("tk::PlaceWindow . center")
@@ -82,7 +82,7 @@ class DropDownMenuChoice():
             Radiobutton(self.root, text = text, variable = self.__opt_var,
                 value = value).pack(side = TOP, ipady = 0)
         
-        Button(self.root, text="Select", command=self.submitForm, width=20,bg="gray",fg="white").place(x=30,y=70)
+        Button(self.root, text="Select", command=self.submitForm, width=20,bg="gray",fg="white").place(x=30,y=150)
         self.root.bind('<Return>', self.submitForm)
         self.root.attributes("-topmost", True)
 
