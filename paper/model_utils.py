@@ -12,6 +12,7 @@ def ask_user_for_dataset():
     options = {
         "Real cam" : "real_merged_l515_640x480",
         "Egohands" : "egohands_data",
+        "COCO" : "coco",
         "Sim val" : "sim_val_320x256",
         "Sim train" : "sim_train_320x256"}
     val = s.DropDownMenuChoice().show_options(options, "Choose dataset:", default_value=wss.tested_dataset)
