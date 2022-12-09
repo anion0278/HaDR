@@ -1,5 +1,6 @@
 import cv2
-import os,random
+from os import listdir
+from os.path import join,exists,splitext
 import matplotlib.pyplot as plt
 import numpy as np
 import mpl_scatter_density
@@ -11,12 +12,12 @@ plt.rcParams.update({'font.size': 18})
 dataset_dir_path = "C:/dataset/sim_val_320x256"
 number_of_instances = 3
 
-centroids_file = os.path.join(dataset_dir_path,"centroid.txt")
-color_dir_path = os.path.join(dataset_dir_path, "color")
-mask_dir_path = os.path.join(dataset_dir_path, "mask2")
+centroids_file = join(dataset_dir_path,"centroid.txt")
+color_dir_path = join(dataset_dir_path, "color")
+mask_dir_path = join(dataset_dir_path, "mask2")
 
 def main():
-    if(os.path.exists(centroids_file)):
+    if(exists(centroids_file)):
         x,y,dims,counts = read_centroids()
     else:
         x,y,dims,counts = find_centroids()
@@ -28,23 +29,18 @@ def find_centroids():
     centroids = []
     counts = [0]*number_of_instances
 
-    name = random.choice(os.listdir(mask_dir_path))
-    file = cv2.imread(os.path.join(mask_dir_path,name))
-    dims = file.shape
+    for filename in listdir(color_dir_path):
 
-    for filename in os.listdir(color_dir_path):
-
-        name = os.path.join(color_dir_path,filename)
-        mask = os.path.join(mask_dir_path,filename)
-        instance_name = os.path.splitext(filename)[0]
+        mask = join(mask_dir_path,filename)
+        instance_name = splitext(filename)[0]
     
         files = []
         instances = 0
-        if(os.path.exists(mask)):
+        if(exists(mask)):
             files.append(cv2.imread(mask,0))
         else:
             for i in range(1,number_of_instances,1):
-                files.append(cv2.imread(os.path.join(mask_dir_path,instance_name + "_i"+str(i)+".png"),0))
+                files.append(cv2.imread(join(mask_dir_path,instance_name + "_i"+str(i)+".png"),0))
             
         for file in files:
             M = cv2.moments(file)
@@ -53,11 +49,10 @@ def find_centroids():
                 cy=int(M["m01"]/M["m00"])
                 centroids.append((cx,cy))
                 instances +=1
-                #cv2.circle(file, (cx, cy), 10, (255, 255, 255), -1)
-                #cv2.imshow("win"+str(len(counts)),file)
         
+        dims = files[0].shape
         counts[instances]+=1
-        if(len(centroids)%10000):
+        if(len(centroids)%10000==0):
             print("{} files processed".format(str(len(centroids))))
 
     f = open(centroids_file,'w')
@@ -102,7 +97,7 @@ def show_graph(x,y,dims,counts):
     scatter = fig.add_subplot(gs2[1,0],projection='scatter_density')
     scatter.grid(visible=None)
     #scatter.hexbin(x,y,gridsize=(dims[1],dims[0]))
-    density = scatter.scatter_density(x,y, color = 'blue',dpi=10)
+    scatter.scatter_density(x,y, color = 'blue',dpi=10)
     scatter.set_xticks(np.arange(0,dims[1]+32,dims[1]/5))
     scatter.set_yticks(np.arange(0,dims[0]+32,dims[1]/5))
     scatter.set_xlabel("x axis (pixels)",labelpad = 10)
