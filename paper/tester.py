@@ -31,6 +31,7 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
+eval_mediapipe = False
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -49,7 +50,7 @@ def mask_to_bbox(mask):
     # plt.show()
     return x, y, x+w, y+h
 
-def get_masks(result, num_classes=80):
+def get_boxes_with_masks(result, num_classes):
     assert len(result) == 1
     masks = [[] for _ in range(num_classes)]
     bboxes = [[] for _ in range(num_classes)]
@@ -74,7 +75,6 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
     model.eval()
     results = []
     dataset = data_loader.dataset
-    num_classes = len(dataset.CLASSES)
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
         with torch.no_grad():
@@ -82,7 +82,7 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
 
         if len(seg_result) == 1: # for SOLO
             segmentation_data = seg_result
-            bboxes,masks = get_masks(segmentation_data, num_classes=num_classes)
+            bboxes,masks = get_boxes_with_masks(segmentation_data, num_classes=len(dataset.CLASSES))
             seg_result = (bboxes, masks)
 
         results.append(seg_result)
@@ -135,27 +135,43 @@ def main():
     if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
 
-    if len(args.checkpoint_path) == 2:
-        checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
-        eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
+    if eval_mediapipe:
+        path = os.path.abspath("./paper/third-party_solutions")
+        sys.path.insert(0,path)
+        import mediapipe_hands
+        model = mediapipe_hands.MediaPipePredictor()
+        cfg = utils.get_config("solov2_light_448_r50_fpn", 3) # name of arch is not important here
+        checkpoint_path_full = s.path_to_datasets
+        args.eval = ["bbox"]
     else:
-        checkpoint_path_full = os.path.join(args.checkpoint_path, s.tested_checkpoint_file_name)
-        eval_dataset = s.path_to_datasets + wss.tested_dataset
+        checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+        arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
+        cfg = utils.get_config(arch, channels)
 
-    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
-    cfg = utils.get_config(arch, channels)
+         # build the model and load checkpoint
+        model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+
+        while not osp.isfile(checkpoint_path_full):
+            print("Waiting for {} to exist...".format(checkpoint_path_full))
+            time.sleep(10) 
+
+        # loading is required
+        checkpoint = load_checkpoint(model, checkpoint_path_full, map_location='cuda:0')
+        
+        # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
+        # if "CLASSES" in checkpoint["meta"]:
+        #     model.CLASSES = checkpoint["meta"]["CLASSES"]
+        # else:
+        #     model.CLASSES = dataset.CLASSES
+
+        model = MMDataParallel(model, device_ids=[0])
 
     if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
 
-    # init distributed env first, since logger depends on the dist info.
-    if args.launcher == "none":
-        distributed = False
-    else:
-        distributed = True
-        init_dist(args.launcher, **cfg.dist_params)
+    eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
 
     PREFIX = os.path.abspath(eval_dataset)
     annotations = eval_dataset_annotations
@@ -178,27 +194,9 @@ def main():
         dataset,
         imgs_per_gpu=1,
         workers_per_gpu=wss.workers,
-        dist=distributed,
+        dist=False,
         shuffle=False)
-
-    # build the model and load checkpoint
-    model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
-    fp16_cfg = cfg.get("fp16", None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
-
-    while not osp.isfile(checkpoint_path_full):
-        print("Waiting for {} to exist...".format(checkpoint_path_full))
-        time.sleep(10)
-
-    checkpoint = load_checkpoint(model, checkpoint_path_full, map_location="cpu")
-    # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
-    if "CLASSES" in checkpoint["meta"]:
-        model.CLASSES = checkpoint["meta"]["CLASSES"]
-    else:
-        model.CLASSES = dataset.CLASSES
-
-    model = MMDataParallel(model, device_ids=[0])
+    
     outputs = single_gpu_test(model, data_loader)
 
     rank, _ = get_dist_info()
@@ -217,6 +215,7 @@ def main():
                     eval_dest = s.path_to_models + "evals.txt"
                     f = open(eval_dest,"a+")
                     f.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
+                    from eval_params import CustomizedEvalParams
                     eval_params = CustomizedEvalParams(dataset.coco)
                     coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True)
                     f.close()
@@ -239,39 +238,6 @@ def main():
                 result_file = args.json_out + ".{}".format(name)
                 results2json(dataset, outputs_, result_file)
 
-
-
-
-from pycocotools.cocoeval import Params
-class CustomizedEvalParams(Params):
-    def __init__(self, coco_dataset):
-        self.smallObjAreaRng, self.mediumObjAreaRng, _ = self.__calc_object_sizes(coco_dataset) # large obj limit is not needed
-        super().__init__()
-
-    def setDetParams(self):
-        super().setDetParams()
-        self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, self.smallObjAreaRng], [self.smallObjAreaRng, self.mediumObjAreaRng], [self.mediumObjAreaRng, 1e5 ** 2]]
-
-    def __calc_object_sizes(self, coco):
-        annotation_areas = []
-        for i in coco.anns:
-            annotation_areas.append(coco.anns[i]['area'])
-
-        annotation_areas.sort()
-
-        small = annotation_areas[len(annotation_areas) // 3 - 1] + 1
-        medium = annotation_areas[len(annotation_areas) * 2 // 3 - 1] + 1
-        large = annotation_areas[len(annotation_areas) - 1] + 1
-
-        print(f"Calculated object sizes from distribution \n Small limit: {small} \n Medium limit: {medium} \n Largest object area: {large}")
-
-        # import matplotlib.pyplot as plt
-        # plt.hist(annotation_areas, edgecolor="green", bins=50)
-        # plt.show()
-        # plt.hist(annotation_areas, edgecolor="green", bins=[0, small, medium, large])
-        # plt.show()
-
-        return small, medium, large
 
 if __name__ == "__main__":
     main()

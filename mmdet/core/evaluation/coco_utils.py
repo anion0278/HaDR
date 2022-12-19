@@ -72,7 +72,7 @@ def coco_eval(result_files,
                 ap = np.mean(precision) if precision.size else float('nan')
                 results_per_category.append(
                     ('{}'.format(nm['name']),
-                     '{:0.3f}'.format(float(ap * 100))))
+                     '{:0.3f} %'.format(float(ap * 100))))
 
             N_COLS = min(6, len(results_per_category) * 2)
             results_flatten = list(itertools.chain(*results_per_category))
