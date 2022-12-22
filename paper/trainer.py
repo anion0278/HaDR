@@ -86,6 +86,7 @@ def parse_args():
     return parser.parse_args()
 
 def evaluate(work_dir):
+    print("Running evaluation (output is disabled!), please wait...")
     from subprocess import run
     import re
     command = f"python paper/tester.py --checkpoint_path {work_dir} --eval segm --out {work_dir}\out.pkl"

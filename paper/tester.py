@@ -143,8 +143,14 @@ def main():
         cfg = utils.get_config("solov2_light_448_r50_fpn", 3) # name of arch is not important here
         checkpoint_path_full = s.path_to_datasets
         args.eval = ["bbox"]
+        eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
     else:
-        checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+        if len(args.checkpoint_path) == 2:
+            checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+            eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
+        else:
+            checkpoint_path_full = os.path.join(args.checkpoint_path, s.tested_checkpoint_file_name)
+            eval_dataset = s.path_to_datasets + wss.tested_dataset
         arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
         cfg = utils.get_config(arch, channels)
 
@@ -171,7 +177,7 @@ def main():
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
 
-    eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
+    
 
     PREFIX = os.path.abspath(eval_dataset)
     annotations = eval_dataset_annotations
