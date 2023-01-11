@@ -12,8 +12,8 @@ batch_size = 4
 # model_input_size = (256, 320) #TODO
 
 # from custom train dataset - RGB-D
-sim_train_mean=[99.715, 97.735, 97.013, 57.901] 
-sim_train_std_rgbd=[67.947, 67.557, 67.676, 47.075]
+sim_train_mean=[98.173, 95.456, 93.858, 55.872] 
+sim_train_std_rgbd=[67.539, 67.194, 67.796, 47.284]
 
 # from custom val dataset - RGB-D
 sim_val_mean=[99.321, 97.284, 96.318, 58.189] 
