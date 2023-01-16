@@ -32,6 +32,7 @@ warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
 eval_mediapipe = False
+min_score = 0.95
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -107,7 +108,9 @@ def parse_args():
         nargs="+",
         choices=["proposal", "proposal_fast", "bbox", "segm", "keypoints"],
         help="eval types",
-        default=["segm", "bbox"])
+        default=["segm", 
+        # "bbox"
+        ])
     parser.add_argument("--show", action="store_true", help="show results")
     parser.add_argument("--tmpdir", help="tmp dir for writing some results")
     parser.add_argument(
@@ -223,7 +226,7 @@ def main():
                     f.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
                     from eval_params import CustomizedEvalParams
                     eval_params = CustomizedEvalParams(dataset.coco)
-                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True)
+                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True, min_score=min_score)
                     f.close()
                 else:
                     for name in outputs[0]:

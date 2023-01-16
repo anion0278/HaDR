@@ -304,7 +304,7 @@ class COCO:
             for ann in anns:
                 print(ann['caption'])
 
-    def loadRes(self, resFile):
+    def loadRes(self, resFile, min_score = 0.0):
         """
         Load result file and return a result api object.
         :param   resFile (str)     : file name of result file
@@ -312,6 +312,8 @@ class COCO:
         """
         res = COCO()
         res.dataset['images'] = [img for img in self.dataset['images']]
+
+        print(f"Min score threshold: {min_score}")
 
         print('Loading and preparing results...')
         tic = time.time()
@@ -322,6 +324,10 @@ class COCO:
             anns = self.loadNumpyAnnotations(resFile)
         else:
             anns = resFile
+
+        # filtering predictions with low score
+        anns = list(filter(lambda ann: ann["score"] > min_score, anns)) 
+
         assert type(anns) == list, 'results in not an array of objects'
         annsImgIds = [ann['image_id'] for ann in anns]
         assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), \
