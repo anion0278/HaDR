@@ -6,6 +6,7 @@ path_to_datasets= wss.storage + ":/datasets/"
 path_to_models= wss.storage + ":/models/"
 path_to_configs_formatted = "./paper/tested_configs/%s.py"
 tested_checkpoint_file_name = "final.pth"
+score_thrs_file_name = "score_threshold_evals.txt"
 visualization_threshold = 0.1
 batch_size = 4
 
@@ -34,6 +35,8 @@ def str2bool(v):
         import argparse 
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
+def list_all_dirs_only(path):
+    return next(os.walk(path))[1]
 
 def add_packages_paths():
     import os, sys

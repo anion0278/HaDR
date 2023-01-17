@@ -3,7 +3,7 @@ import ws_specific_settings as wss
 import common_settings as s
 import re
 
-ALL_MODELS_DIR = s.path_to_models
+ALL_MODELS_DIR = "E:\models\FINAL_TRAIN_ours" # s.path_to_models
 MODEL_NAME = "final.pth"
 
 for model_dir in os.listdir(ALL_MODELS_DIR):

@@ -1,66 +1,47 @@
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # for skimage.measure
-import argparse
-import os
-import os.path as osp
-import shutil
-import tempfile
 import sys, os
 path = os.path.abspath("./modified_packges")
 sys.path.insert(0,path)
-import mmcv
-import torch
-import torch.nn.functional as F
-import torch.distributed as dist
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-from mmcv.runner import init_dist, get_dist_info, load_checkpoint
-from mmdet.core import coco_eval, results2json, results2json_segm, wrap_fp16_model, tensor2imgs, get_classes
-from mmdet.datasets import build_dataloader, build_dataset
-from mmdet.models import build_detector
-import time
 import numpy as np
-import pycocotools.mask as mask_util
 import sys
 import ws_specific_settings as wss
-import model_utils as utils
 import common_settings as s
-from skimage.measure import label, regionprops, find_contours
-import cv2
-
-min_score = 0.5
-
-checkpoint_path_full = 
-
-eval_dataset = ""
-eval_dataset_annotations = "/instances_hands_full.json"
-
-arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
-cfg = utils.get_config(arch, channels)
-cfg.data.test.test_mode = True
-
-PREFIX = os.path.abspath(eval_dataset)
-annotations = eval_dataset_annotations
-from os.path import exists
-
-# evaluating pretrained COCO model on ARMS datasets, because it has only "Person" class
-arms_annotations = eval_dataset_annotations.replace("hands", "arms")
-if cfg.model.bbox_head.num_classes == 81 and exists(PREFIX + arms_annotations): 
-    annotations = arms_annotations
-    print("Eval ARMS")
-
-cfg.data.test.ann_file = dataset + ""
-cfg.data.test.img_prefix = f"{dataset}/{utils.get_main_channel_name(cfg.model.backbone.in_channels)}/"
-cfg.data.test.type =  "CocoDataset"
+import cv2, regex as re
+import model_utils as utils
 
 
-dataset = build_dataset(cfg.data.test)
+path_to_models = "E:\models\FINAL_TRAIN_ours" # s.path_to_models
 
-eval_dest = os.path.join(checkpoint_path_full, os.path.pardir, "confidence_score_thrs_evals.txt")
-f = open(eval_dest,"a+")
+ap_range = "0.50:0.95" # . does not have to be replaced with escaped version
+regex_pattern = f"Min score: (\d.\d+)\n[\S\s]+?IoU=({ap_range}).+ = (\d.\d+)\n"
 
-for min_score in [0.5, 0.65]:
-    f.write(f"Threshold: {min_score}\n")
-    from eval_params import CustomizedEvalParams
-    eval_params = CustomizedEvalParams(dataset.coco)
-    coco_eval(["out.pkl.segm.json"], ["segm"], dataset.coco, file = f, override_eval_params = eval_params, classwise=True, min_score=min_score)
-f.close()
+arch_translation = {
+    "mask_rcnn_r50_fpn" : "Mask R-CNN ResNet50",
+    "mask_rcnn_r101_fpn" : "Mask R-CNN ResNet101",
+    "solov2_light_448_r50_fpn" : "SOLOv2 ResNet50",
+    "solov2_r101_fpn" : "SOLOv2 ResNet101"
+}
+
+channels_translation = {
+    1 : "Depth",
+    3 : "RGB",
+    4 : "RGB-D",
+}
+
+data = []
+
+for dir in s.list_all_dirs_only(path_to_models):
+    f = open(os.path.join(path_to_models, dir, s.score_thrs_file_name), "r")
+    file_content = f.read()
+    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(dir)
+    arch_name = arch_translation[arch]
+    channels_name = channels_translation[channels]
+    model_data = []
+    for match in re.finditer(regex_pattern, file_content):
+        min_score = match.group(1)
+        #ap_range = match.group(2)
+        ap = match.group(3)
+        single_score_thrs = [min_score, ap]
+        model_data.append(single_score_thrs)
+    data.append([f"{arch_name}: {channels_name}", model_data])
+
+print(data)

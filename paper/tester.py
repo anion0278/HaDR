@@ -216,7 +216,7 @@ def main():
                     total_out_file = open(s.path_to_models + "evals.txt","a+")
                     total_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
                     if eval_predictions_in_score_range:
-                        score_thrs_out_file = open(os.path.join(checkpoint_path_full, os.pardir, "score_threshold_evals.txt"),"w+")
+                        score_thrs_out_file = open(os.path.join(checkpoint_path_full, os.pardir, s.score_thrs_file_name),"w+")
                         score_thrs_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
                         eval_predictions_in_score_range(dataset, eval_types, result_files, score_thrs_out_file)
                         score_thrs_out_file.close()
