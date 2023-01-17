@@ -31,8 +31,8 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
+eval_score_threshold = True
 eval_mediapipe = False
-min_score = 0.95
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -166,12 +166,6 @@ def main():
 
         # loading is required
         checkpoint = load_checkpoint(model, checkpoint_path_full, map_location='cuda:0')
-        
-        # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
-        # if "CLASSES" in checkpoint["meta"]:
-        #     model.CLASSES = checkpoint["meta"]["CLASSES"]
-        # else:
-        #     model.CLASSES = dataset.CLASSES
 
         model = MMDataParallel(model, device_ids=[0])
 
@@ -179,8 +173,6 @@ def main():
         torch.backends.cudnn.benchmark = True
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
-
-    
 
     PREFIX = os.path.abspath(eval_dataset)
     annotations = eval_dataset_annotations
@@ -221,13 +213,15 @@ def main():
             else:
                 if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json(dataset, outputs, args.out)
-                    eval_dest = s.path_to_models + "evals.txt"
-                    f = open(eval_dest,"a+")
-                    f.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
-                    from eval_params import CustomizedEvalParams
-                    eval_params = CustomizedEvalParams(dataset.coco)
-                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True, min_score=min_score)
-                    f.close()
+                    total_out_file = open(s.path_to_models + "evals.txt","a+")
+                    total_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
+                    if eval_predictions_in_score_range:
+                        score_thrs_out_file = open(os.path.join(checkpoint_path_full, os.pardir, "score_threshold_evals.txt"),"w+")
+                        score_thrs_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
+                        eval_predictions_in_score_range(dataset, eval_types, result_files, score_thrs_out_file)
+                        score_thrs_out_file.close()
+                    eval_predicitons(dataset, eval_types, result_files, total_out_file, 0.0)
+                    total_out_file.close()
                 else:
                     for name in outputs[0]:
                         print("\nEvaluating {}".format(name))
@@ -246,6 +240,18 @@ def main():
                 outputs_ = [out[name] for out in outputs]
                 result_file = args.json_out + ".{}".format(name)
                 results2json(dataset, outputs_, result_file)
+
+def eval_predictions_in_score_range(dataset, eval_types, result_files, eval_out_file):
+    step = 0.025
+    for min_score in np.arange(0.0, 1.0 + step, step):
+        eval_predicitons(dataset, eval_types, result_files, eval_out_file, min_score)
+
+def eval_predicitons(dataset, eval_types, result_files, eval_out_file, min_score):
+    eval_out_file.write(f"Min score: {min_score:.3f}\n")
+    from eval_params import CustomizedEvalParams
+    eval_params = CustomizedEvalParams(dataset.coco)
+    coco_eval(result_files, eval_types, dataset.coco, file = eval_out_file, 
+                override_eval_params = eval_params, classwise=True, min_score=min_score)
 
 
 if __name__ == "__main__":
