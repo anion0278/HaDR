@@ -6,11 +6,11 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 class MediaPipePredictor:
-    def __init__(self):
+    def __init__(self, min_confidence_score):
       self.model = mp_hands.Hands(
           static_image_mode=True,
           max_num_hands=4,
-          min_detection_confidence=0.1)
+          min_detection_confidence=min_confidence_score)
 
     def eval(self):
         pass

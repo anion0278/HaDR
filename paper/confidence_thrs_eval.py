@@ -10,7 +10,7 @@ import model_utils as utils
 import matplotlib.pyplot as plt
 
 plt.rcParams.update({'font.size': 12})
-path_to_models = "F:\models\FINAL_TRAIN_ours" # s.path_to_models
+path_to_models = "E:\models\FINAL_TRAIN_ours" # s.path_to_models
 
 ap_range = "0.50:0.95" # . does not have to be replaced with escaped version
 regex_pattern = f"Min score: (\d.\d+)\n[\S\s]+?IoU=({ap_range}).+ = (\d.\d+)\n"
@@ -62,7 +62,7 @@ for dir in s.list_all_dirs_only(path_to_models):
         ap = float(match.group(3))
         single_score_thrs = [min_score, ap]
         model_data.append(single_score_thrs)
-    data.append([f"{arch_name}: {channels_name}", model_data])
+    data.append([f"{arch_name} ({channels_name})", model_data])
 
 make_graph(data)
 

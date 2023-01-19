@@ -26,6 +26,7 @@ import model_utils as utils
 import common_settings as s
 from skimage.measure import label, regionprops, find_contours
 import cv2
+from eval_params import CustomizedEvalParams
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
@@ -33,6 +34,8 @@ warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 TEST = False
 eval_score_threshold = True
 eval_mediapipe = False
+
+default_min_score = 0.1
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -142,7 +145,7 @@ def main():
         path = os.path.abspath("./paper/third-party_solutions")
         sys.path.insert(0,path)
         import mediapipe_hands
-        model = mediapipe_hands.MediaPipePredictor()
+        model = mediapipe_hands.MediaPipePredictor(default_min_score)
         cfg = utils.get_config("solov2_light_448_r50_fpn", 3) # name of arch is not important here
         checkpoint_path_full = s.path_to_datasets
         args.eval = ["bbox"]
@@ -191,6 +194,8 @@ def main():
     dataset = build_dataset(cfg.data.test)
     dataset.CLASSES = ["hand"] # for hands tests
 
+    eval_params = CustomizedEvalParams(dataset.coco)
+
     data_loader = build_dataloader(
         dataset,
         imgs_per_gpu=1,
@@ -220,7 +225,7 @@ def main():
                         score_thrs_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
                         eval_predictions_in_score_range(dataset, eval_types, result_files, score_thrs_out_file)
                         score_thrs_out_file.close()
-                    eval_predicitons(dataset, eval_types, result_files, total_out_file, 0.0)
+                    eval_predicitons(dataset, eval_types, result_files, total_out_file, default_min_score)
                     total_out_file.close()
                 else:
                     for name in outputs[0]:
@@ -248,7 +253,6 @@ def eval_predictions_in_score_range(dataset, eval_types, result_files, eval_out_
 
 def eval_predicitons(dataset, eval_types, result_files, eval_out_file, min_score):
     eval_out_file.write(f"Min score: {min_score:.3f}\n")
-    from eval_params import CustomizedEvalParams
     eval_params = CustomizedEvalParams(dataset.coco)
     coco_eval(result_files, eval_types, dataset.coco, file = eval_out_file, 
                 override_eval_params = eval_params, classwise=True, min_score=min_score)
