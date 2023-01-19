@@ -194,8 +194,6 @@ def main():
     dataset = build_dataset(cfg.data.test)
     dataset.CLASSES = ["hand"] # for hands tests
 
-    eval_params = CustomizedEvalParams(dataset.coco)
-
     data_loader = build_dataloader(
         dataset,
         imgs_per_gpu=1,
