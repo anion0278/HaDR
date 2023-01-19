@@ -17,8 +17,16 @@ def show_hist(data, bins, enable_bar_labels = True):
         col /= (1 / range_corr)
         col += range_corr
 
+        colors = []
         for c, p in zip(col, bars):
             plt.setp(p, 'facecolor', cm(c))
+            colors.append(cm(c))
+
+        if enable_bar_labels:
+            from matplotlib.patches import Rectangle
+            handles = [Rectangle((0,0),1,1,color=c,ec="k") for c in colors]
+            labels= ["small","medium", "large"]
+            plt.legend(handles, labels, loc="lower right")
 
         plt.xlabel('Instance area')
         plt.ylabel('Number of instances')
@@ -49,9 +57,9 @@ class CustomizedEvalParams(Params):
         print(f"Calculated object sizes from distribution \n Small limit: {small} \n Medium limit: {medium} \n Largest object area: {large}")
 
         # COCO: self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
-        show_hist(annotation_areas,[0, 32 ** 2, 96 ** 2, large])
-        show_hist(annotation_areas,[0, small, medium, large])
-        show_hist(annotation_areas,50, False)
+        # show_hist(annotation_areas,[0, 32 ** 2, 96 ** 2, large])
+        # show_hist(annotation_areas,[0, small, medium, large])
+        # show_hist(annotation_areas,50, False)
 
         return small, medium, large
 
