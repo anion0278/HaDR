@@ -24,7 +24,7 @@ default_experiment_tag = "1C"
 default_arch_name = "solov2_r101_fpn"
 is_batchnorm_fixed = False
 is_model_coco_pretrained = True
-is_aug_enabled = False
+is_aug_enabled = True
 default_channels = 4
 
 frozen_epochs = 0
