@@ -233,8 +233,7 @@ class RandomFlip(object):
         if 'flip' not in results:
             flip = True if np.random.rand() < self.flip_ratio else False
             results['flip'] = flip
-        if 'flip_direction' not in results:
-            results['flip_direction'] = self.direction
+        results['flip_direction'] = self.direction
         if results['flip']:
             # flip image
             results['img'] = mmcv.imflip(
