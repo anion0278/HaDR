@@ -57,6 +57,7 @@ def compare_single_image(img_prediction,filename):
                 img_prediction[i,j]=(255,0,0)
                 FN = FN + 1
             elif img_prediction[i,j][0]==255:
+                img_prediction[i,j]=(255,255,255)
                 TP = TP + 1
     
     return img_prediction,[str(TP),str(FP),str(FN)]
