@@ -100,7 +100,6 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
     parser.add_argument("--checkpoint_path", help="checkpoint path", default=(None, s.path_to_models+wss.tested_model))
-    parser.add_argument("--out", help="output result file", default=s.path_to_models + "out.pkl")
     parser.add_argument(
         "--json_out",
         help="output result file name without extension",
@@ -130,13 +129,6 @@ def parse_args():
 def main():
     print(sys.argv)
     args = parse_args()
-
-    assert args.out or args.show or args.json_out, \
-        ("Please specify at least one operation (save or show the results) "
-         "with the argument '--out' or '--show' or '--json_out'")
-
-    if args.out is not None and not args.out.endswith((".pkl", ".pickle")):
-        raise ValueError("The output file must be a pkl file.")
 
     if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
@@ -171,6 +163,8 @@ def main():
         checkpoint = load_checkpoint(model, checkpoint_path_full, map_location='cuda:0')
 
         model = MMDataParallel(model, device_ids=[0])
+
+    args.out = os.path.dirname(os.path.abspath(checkpoint_path_full)) + "/out.pkl"
 
     if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True
