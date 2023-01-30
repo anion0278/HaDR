@@ -32,7 +32,7 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
-eval_score_threshold = True
+eval_score_threshold = False
 eval_mediapipe = False
 
 default_min_score = 0.1
@@ -112,7 +112,7 @@ def parse_args():
         choices=["proposal", "proposal_fast", "bbox", "segm", "keypoints"],
         help="eval types",
         default=["segm", 
-        # "bbox"
+        "bbox"
         ])
     parser.add_argument("--show", action="store_true", help="show results")
     parser.add_argument("--tmpdir", help="tmp dir for writing some results")
@@ -218,7 +218,7 @@ def main():
                     result_files = results2json(dataset, outputs, args.out)
                     total_out_file = open(s.path_to_models + "evals.txt","a+")
                     total_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
-                    if eval_predictions_in_score_range:
+                    if eval_score_threshold:
                         score_thrs_out_file = open(os.path.join(checkpoint_path_full, os.pardir, s.score_thrs_file_name),"w+")
                         score_thrs_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
                         eval_predictions_in_score_range(dataset, eval_types, result_files, score_thrs_out_file)
