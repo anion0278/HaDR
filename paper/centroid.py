@@ -9,11 +9,14 @@ from ast import literal_eval
 #plt.style.use('_mpl-gallery')
 plt.rcParams.update({'font.size': 18})
 
-dataset_dir_path = "C:/dataset/sim_val_320x256"
-number_of_instances = 3
+dataset_dir_path = "F:/datasets/sim_train_320x256"
+number_of_instances = 3 #instances + 1 (no instance)
 
 centroids_file = join(dataset_dir_path,"centroid.txt")
-color_dir_path = join(dataset_dir_path, "color")
+if exists(join(dataset_dir_path, "color")):
+    source_dir_path = join(dataset_dir_path, "color")
+else:
+    source_dir_path = join(dataset_dir_path, "depth")
 mask_dir_path = join(dataset_dir_path, "mask2")
 
 def main():
@@ -29,7 +32,7 @@ def find_centroids():
     centroids = []
     counts = [0]*number_of_instances
 
-    for filename in listdir(color_dir_path):
+    for filename in listdir(source_dir_path):
 
         mask = join(mask_dir_path,filename)
         instance_name = splitext(filename)[0]
@@ -82,7 +85,7 @@ def show_graph(x,y,dims,counts):
     fig = plt.figure()
     gs = fig.add_gridspec(1,2,wspace=0.2)
     gs1=gs[0].subgridspec(1,1)
-    gs2=gs[1].subgridspec(2,2,height_ratios=[1,8],width_ratios=[8,1],wspace=0.12,hspace=0.06)
+    gs2=gs[1].subgridspec(2,2,height_ratios=[1,8],width_ratios=[8,1],wspace=0.13,hspace=0.06)
     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.95, top=0.9)
 
  
@@ -90,6 +93,12 @@ def show_graph(x,y,dims,counts):
     bar.bar(list(range(number_of_instances)),counts,color = 'blue')
     bar.grid(visible=None)
     bar.set_xticks(list(range(number_of_instances)))
+    maxcounts = max(counts)
+    power = len(str(maxcounts))-2
+    yticks = np.arange(0,maxcounts,(np.ceil(maxcounts/(10**power))*10**power)/5)
+    if (yticks[-1]!=np.ceil(maxcounts/(10**power))*10**power):
+        yticks=np.append(yticks,np.ceil(maxcounts/(10**power))*10**power)
+    bar.set_yticks(yticks)
 
     bar.set_xlabel("number of instances",labelpad = 10)
     bar.set_ylabel("number of images",labelpad = 10)
@@ -98,8 +107,15 @@ def show_graph(x,y,dims,counts):
     scatter.grid(visible=None)
     #scatter.hexbin(x,y,gridsize=(dims[1],dims[0]))
     scatter.scatter_density(x,y, color = 'blue',dpi=10)
-    scatter.set_xticks(np.arange(0,dims[1]+32,dims[1]/5))
-    scatter.set_yticks(np.arange(0,dims[0]+32,dims[1]/5))
+    
+    xticks = np.arange(0,dims[1]+32,dims[1]/5)
+    yticks = np.arange(0,dims[0]+32,dims[1]/5)
+    if (xticks[-1]!=dims[1]):
+        xticks=np.append(xticks,dims[1])
+    if (yticks[-1]!=dims[0]):
+        yticks=np.append(yticks,dims[0])
+    scatter.set_xticks(xticks)
+    scatter.set_yticks(yticks)
     scatter.set_xlabel("x axis (pixels)",labelpad = 10)
     scatter.set_ylabel("y axis (pixels)",labelpad = 10)
 
