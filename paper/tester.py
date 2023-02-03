@@ -26,12 +26,16 @@ import model_utils as utils
 import common_settings as s
 from skimage.measure import label, regionprops, find_contours
 import cv2
+from eval_params import CustomizedEvalParams
 
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
+eval_score_threshold = False
 eval_mediapipe = False
+
+default_min_score = 0.1
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -96,7 +100,6 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
     parser.add_argument("--checkpoint_path", help="checkpoint path", default=(None, s.path_to_models+wss.tested_model))
-    parser.add_argument("--out", help="output result file", default=s.path_to_models + "out.pkl")
     parser.add_argument(
         "--json_out",
         help="output result file name without extension",
@@ -107,7 +110,9 @@ def parse_args():
         nargs="+",
         choices=["proposal", "proposal_fast", "bbox", "segm", "keypoints"],
         help="eval types",
-        default=["segm", "bbox"])
+        default=["segm", 
+        "bbox"
+        ])
     parser.add_argument("--show", action="store_true", help="show results")
     parser.add_argument("--tmpdir", help="tmp dir for writing some results")
     parser.add_argument(
@@ -125,13 +130,6 @@ def main():
     print(sys.argv)
     args = parse_args()
 
-    assert args.out or args.show or args.json_out, \
-        ("Please specify at least one operation (save or show the results) "
-         "with the argument '--out' or '--show' or '--json_out'")
-
-    if args.out is not None and not args.out.endswith((".pkl", ".pickle")):
-        raise ValueError("The output file must be a pkl file.")
-
     if args.json_out is not None and args.json_out.endswith(".json"):
         args.json_out = args.json_out[:-5]
 
@@ -139,12 +137,18 @@ def main():
         path = os.path.abspath("./paper/third-party_solutions")
         sys.path.insert(0,path)
         import mediapipe_hands
-        model = mediapipe_hands.MediaPipePredictor()
+        model = mediapipe_hands.MediaPipePredictor(default_min_score)
         cfg = utils.get_config("solov2_light_448_r50_fpn", 3) # name of arch is not important here
         checkpoint_path_full = s.path_to_datasets
         args.eval = ["bbox"]
+        eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
     else:
-        checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+        if len(args.checkpoint_path) == 2:
+            checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
+            eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
+        else:
+            checkpoint_path_full = os.path.join(args.checkpoint_path, s.tested_checkpoint_file_name)
+            eval_dataset = s.path_to_datasets + wss.tested_dataset
         arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
         cfg = utils.get_config(arch, channels)
 
@@ -157,21 +161,15 @@ def main():
 
         # loading is required
         checkpoint = load_checkpoint(model, checkpoint_path_full, map_location='cuda:0')
-        
-        # old versions did not save class info in checkpoints, this walkaround is for backward compatibility
-        # if "CLASSES" in checkpoint["meta"]:
-        #     model.CLASSES = checkpoint["meta"]["CLASSES"]
-        # else:
-        #     model.CLASSES = dataset.CLASSES
 
         model = MMDataParallel(model, device_ids=[0])
+
+    args.out = os.path.dirname(os.path.abspath(checkpoint_path_full)) + "/out.pkl"
 
     if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
-
-    eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
 
     PREFIX = os.path.abspath(eval_dataset)
     annotations = eval_dataset_annotations
@@ -212,13 +210,15 @@ def main():
             else:
                 if not isinstance(outputs[0], dict): # Segmentation
                     result_files = results2json(dataset, outputs, args.out)
-                    eval_dest = s.path_to_models + "evals.txt"
-                    f = open(eval_dest,"a+")
-                    f.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
-                    from eval_params import CustomizedEvalParams
-                    eval_params = CustomizedEvalParams(dataset.coco)
-                    coco_eval(result_files, eval_types, dataset.coco, file = f, override_eval_params = eval_params, classwise=True)
-                    f.close()
+                    total_out_file = open(s.path_to_models + "evals.txt","a+")
+                    total_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
+                    if eval_score_threshold:
+                        score_thrs_out_file = open(os.path.join(checkpoint_path_full, os.pardir, s.score_thrs_file_name),"w+")
+                        score_thrs_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
+                        eval_predictions_in_score_range(dataset, eval_types, result_files, score_thrs_out_file)
+                        score_thrs_out_file.close()
+                    eval_predicitons(dataset, eval_types, result_files, total_out_file, default_min_score)
+                    total_out_file.close()
                 else:
                     for name in outputs[0]:
                         print("\nEvaluating {}".format(name))
@@ -237,6 +237,17 @@ def main():
                 outputs_ = [out[name] for out in outputs]
                 result_file = args.json_out + ".{}".format(name)
                 results2json(dataset, outputs_, result_file)
+
+def eval_predictions_in_score_range(dataset, eval_types, result_files, eval_out_file):
+    step = 0.025
+    for min_score in np.arange(0.0, 1.0 + step, step):
+        eval_predicitons(dataset, eval_types, result_files, eval_out_file, min_score)
+
+def eval_predicitons(dataset, eval_types, result_files, eval_out_file, min_score):
+    eval_out_file.write(f"Min score: {min_score:.3f}\n")
+    eval_params = CustomizedEvalParams(dataset.coco)
+    coco_eval(result_files, eval_types, dataset.coco, file = eval_out_file, 
+                override_eval_params = eval_params, classwise=True, min_score=min_score)
 
 
 if __name__ == "__main__":

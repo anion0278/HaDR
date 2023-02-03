@@ -24,7 +24,7 @@ default_experiment_tag = "1C"
 default_arch_name = "solov2_r101_fpn"
 is_batchnorm_fixed = False
 is_model_coco_pretrained = True
-is_aug_enabled = False
+is_aug_enabled = True
 default_channels = 4
 
 frozen_epochs = 0
@@ -86,9 +86,10 @@ def parse_args():
     return parser.parse_args()
 
 def evaluate(work_dir):
+    print("Running evaluation (output is disabled!), please wait...")
     from subprocess import run
     import re
-    command = f"python paper/tester.py --checkpoint_path {work_dir} --eval segm --out {work_dir}\out.pkl"
+    command = f"python paper/tester.py --checkpoint_path {work_dir} --eval segm"
     output = run(command, capture_output=True).stdout
     print(command)
     return re.sub("index created[\s\S]*Writing results to", "", output.decode('ascii'), count=0, flags=0)

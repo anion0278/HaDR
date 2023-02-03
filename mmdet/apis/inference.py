@@ -165,6 +165,7 @@ def show_result(img,
                 class_names,
                 score_thr=0.3,
                 wait_time=0,
+                show_bbox = True,
                 show=True,
                 out_file=None):
     """Visualize the detection results on the image.
@@ -213,15 +214,16 @@ def show_result(img,
             mask = maskUtils.decode(segms[i]).astype(np.bool)
             img[mask] = img[mask] * 0.5 + color_mask * 0.5
     # draw bounding boxes
-    mmcv.imshow_det_bboxes(
-        img,
-        bboxes,
-        labels,
-        class_names=class_names,
-        score_thr=score_thr,
-        show=show,
-        wait_time=wait_time,
-        out_file=out_file)
+    if (show_bbox):
+        mmcv.imshow_det_bboxes(
+            img,
+            bboxes,
+            labels,
+            class_names=class_names,
+            score_thr=score_thr,
+            show=show,
+            wait_time=wait_time,
+            out_file=out_file)
     if not (show or out_file):
         return img
 
@@ -230,7 +232,8 @@ def show_result_pyplot(img,
                        result,
                        class_names,
                        score_thr=0.3,
-                       fig_size=(15, 10)):
+                       fig_size=(15, 10),
+                       show_bbox=True):
     """Visualize the detection results on the image.
 
     Args:
@@ -244,7 +247,7 @@ def show_result_pyplot(img,
             be written to the out file instead of shown in a window.
     """
     img = show_result(
-        img, result, class_names, score_thr=score_thr, show=False)
+        img, result, class_names, score_thr=score_thr,show=False,show_bbox=show_bbox)
     return img
     # plt.figure(figsize=fig_size)
     # plt.imshow(mmcv.bgr2rgb(img))
@@ -255,7 +258,8 @@ def show_result_ins(img,
                     class_names,
                     score_thr=0.3,
                     sort_by_density=False,
-                    out_file=None):
+                    out_file=None,
+                    show_bbox = True):
     """Visualize the instance segmentation results on the image.
 
     Args:
@@ -328,8 +332,8 @@ def show_result_ins(img,
         label_text += '|{:.02f}'.format(cur_score)
         center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)
         vis_pos = (max(int(center_x) - 10, 0), int(center_y))
-        cv2.putText(img_show, label_text, vis_pos,
-                        cv2.FONT_ITALIC, 0.45, (255, 255, 255))  
+        if(show_bbox):
+            cv2.putText(img_show, label_text, vis_pos,cv2.FONT_ITALIC, 0.45, (255, 255, 255))  
     if out_file is None:
         return img_show
     else:

@@ -14,7 +14,8 @@ def ask_user_for_dataset():
         "Egohands" : "egohands_data",
         "COCO" : "coco",
         "Sim val" : "sim_val_320x256",
-        "Sim train" : "sim_train_320x256"}
+        "Sim train" : "sim_train_320x256",
+        "COCO val" : "coco2017val"}
     val = s.DropDownMenuChoice().show_options(options, "Choose dataset:", default_value=wss.tested_dataset)
     print(f"Selected: {val}")
     return val
@@ -76,7 +77,7 @@ def __set_config_params(cfg):
     cfg.gpus = wss.gpus
     cfg.dist_params = dict(backend='nccl')
     cfg.resume_from = None
-    cfg.checkpoint_config = dict(create_symlink=False, interval = 10) # TRY TO USE state of optimizer save_optimizer = True
+    cfg.checkpoint_config = dict(create_symlink=False, interval = 20) # TRY TO USE state of optimizer save_optimizer = True
 
     cfg.log_config = dict(interval=1, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
     cfg.log_level = 'INFO'

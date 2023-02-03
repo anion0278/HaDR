@@ -2,31 +2,31 @@ import os
 archs = {
     "1": "solov2_light_448_r50_fpn",
     "2": "solov2_r101_fpn",
-    # "3": "mask_rcnn_r50_fpn",
-    # "4": "mask_rcnn_r101_fpn",
+    "3": "mask_rcnn_r50_fpn",
+    "4": "mask_rcnn_r101_fpn",
     }
 
 ds_3rd_p = "third-party/"
 our_ds = "sim_train_320x256"
 
 data_configs = {
-    "E": (3, False, ds_3rd_p+"egohands"),
+    #"X": (1, True, our_ds),
+    #"Y": (3, True, our_ds),
+    #"Z": (4, True, our_ds),
 
-    "H": (1, False, ds_3rd_p+"handseg"),
+    #"E": (3, True, ds_3rd_p+"egohands"),
 
-    "D": (1, False, ds_3rd_p+"densehands"),
+    #"H": (1, True, ds_3rd_p+"handseg"), #chybí mask_r100
 
-    "O": (1, False, ds_3rd_p+"obman"),
-    "O": (3, False, ds_3rd_p+"obman"),
-    "O": (4, False, ds_3rd_p+"obman"),
+    "D": (1, True, ds_3rd_p+"densehands"),
 
-    "R": (1, False, ds_3rd_p+"RHD"),
-    "R": (3, False, ds_3rd_p+"RHD"),
-    "R": (4, False, ds_3rd_p+"RHD"),
+    # "O": (1, True, ds_3rd_p+"obman"),
+    # "O": (3, True, ds_3rd_p+"obman"),
+    # "O": (4, True, ds_3rd_p+"obman"),
 
-    "X": (1, False, our_ds),
-    "Y": (3, False, our_ds),
-    "Z": (4, False, our_ds),
+    # "R": (1, True, ds_3rd_p+"RHD"),
+    # "R": (3, True, ds_3rd_p+"RHD"),
+    # "R": (4, True, ds_3rd_p+"RHD"),
     }
 
 for tag_name, config in data_configs.items():

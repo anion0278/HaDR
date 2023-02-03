@@ -6,14 +6,15 @@ path_to_datasets= wss.storage + ":/datasets/"
 path_to_models= wss.storage + ":/models/"
 path_to_configs_formatted = "./paper/tested_configs/%s.py"
 tested_checkpoint_file_name = "final.pth"
+score_thrs_file_name = "score_threshold_evals.txt"
 visualization_threshold = 0.1
 batch_size = 4
 
 # model_input_size = (256, 320) #TODO
 
 # from custom train dataset - RGB-D
-sim_train_mean=[99.715, 97.735, 97.013, 57.901] 
-sim_train_std_rgbd=[67.947, 67.557, 67.676, 47.075]
+sim_train_mean=[98.173, 95.456, 93.858, 55.872] 
+sim_train_std_rgbd=[67.539, 67.194, 67.796, 47.284]
 
 # from custom val dataset - RGB-D
 sim_val_mean=[99.321, 97.284, 96.318, 58.189] 
@@ -34,6 +35,8 @@ def str2bool(v):
         import argparse 
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
+def list_all_dirs_only(path):
+    return next(os.walk(path))[1]
 
 def add_packages_paths():
     import os, sys

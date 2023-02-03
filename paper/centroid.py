@@ -85,13 +85,13 @@ def show_graph(x,y,dims,counts):
     fig = plt.figure()
     gs = fig.add_gridspec(1,2,wspace=0.2)
     gs1=gs[0].subgridspec(1,1)
-    gs2=gs[1].subgridspec(2,2,height_ratios=[1,8],width_ratios=[8,1],wspace=0.13,hspace=0.06)
+    gs2=gs[1].subgridspec(2,2,height_ratios=[1,8],width_ratios=[8,1],wspace=0.14,hspace=0.08)
     plt.subplots_adjust(left=0.1, bottom=0.1, right=0.95, top=0.9)
 
  
     bar = fig.add_subplot(gs1[0,0])
     bar.bar(list(range(number_of_instances)),counts,color = 'blue')
-    bar.grid(visible=None)
+    bar.grid(visible=False)
     bar.set_xticks(list(range(number_of_instances)))
     maxcounts = max(counts)
     power = len(str(maxcounts))-2
@@ -104,7 +104,7 @@ def show_graph(x,y,dims,counts):
     bar.set_ylabel("number of images",labelpad = 10)
 
     scatter = fig.add_subplot(gs2[1,0],projection='scatter_density')
-    scatter.grid(visible=None)
+    scatter.grid(visible=False)
     #scatter.hexbin(x,y,gridsize=(dims[1],dims[0]))
     scatter.scatter_density(x,y, color = 'blue',dpi=10)
     
@@ -125,7 +125,7 @@ def show_graph(x,y,dims,counts):
     hy,_,_=y_hist.hist(y,np.arange(0,dims[0]+1,1), orientation="horizontal",color = 'blue')
     max_hist = np.round(max(hy),-2)+50
     y_hist.set_xticks([0,max_hist])
-    y_hist.grid(visible=None)
+    y_hist.grid(visible=False)
     y_hist.tick_params(axis="y", labelleft=False)
 
     x_hist = fig.add_subplot(gs2[0,0], sharex = scatter)
@@ -133,7 +133,7 @@ def show_graph(x,y,dims,counts):
     max_hist = np.round(max(hy),-2)+50
     x_hist.set_yticks([0,max_hist])
     x_hist.tick_params(axis="x", labelbottom=False)
-    x_hist.grid(visible=None)
+    x_hist.grid(visible=False)
     plt.show()
 
 

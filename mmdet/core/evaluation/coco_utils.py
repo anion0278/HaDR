@@ -17,6 +17,7 @@ def coco_eval(result_files,
               max_dets=(100, 300, 1000),
               classwise=False,
               file = None,
+              min_score = 0.0,
               override_eval_params = None):
     for res_type in result_types:
         assert res_type in [
@@ -42,7 +43,7 @@ def coco_eval(result_files,
             assert TypeError('result_files must be a str or dict')
         assert result_file.endswith('.json')
 
-        coco_dets = coco.loadRes(result_file)
+        coco_dets = coco.loadRes(result_file, min_score)
         img_ids = coco.getImgIds()
         iou_type = 'bbox' if res_type == 'proposal' else res_type
         cocoEval = COCOeval(coco, coco_dets, iou_type, file = file, override_eval_params = override_eval_params)

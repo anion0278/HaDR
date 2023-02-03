@@ -1,6 +1,6 @@
 import inspect
 
-import mmcv
+import mmcv, cv2
 import numpy as np
 from numpy import random
 import random as rn
@@ -233,8 +233,7 @@ class RandomFlip(object):
         if 'flip' not in results:
             flip = True if np.random.rand() < self.flip_ratio else False
             results['flip'] = flip
-        if 'flip_direction' not in results:
-            results['flip_direction'] = self.direction
+        results['flip_direction'] = self.direction
         if results['flip']:
             # flip image
             results['img'] = mmcv.imflip(
@@ -421,6 +420,74 @@ class RandomCrop(object):
 
 
 @PIPELINES.register_module
+class RandomCropResizeShiftRgbd(object): 
+    """
+    randomly crops(shifts)-resizes RGB or Depth making the result look more like real cam img
+    :channels ["color","depth","random"] - which channels will be changed
+    Random crop the image & bboxes & masks.
+
+    Args:
+        crop_size (tuple): Expected size after cropping, (h, w).
+    """
+
+    def __init__(self, crop_size_ratio, channels = "random"):
+        
+        self.channels = channels
+        self.crop_size_ratio = crop_size_ratio
+
+    def __call__(self, results):
+        assert self.channels in ["random", "color", "depth"]
+        img_shape = results['img'].shape
+        img_rgb = results['img'][:,:,0:3]
+        img_d = results['img'][:,:,-1]
+        img_d = img_d[..., np.newaxis]
+
+        crop_size = (np.array(img_shape[0:2]) * (1 - self.crop_size_ratio)).astype(int)
+        margin_h = max(img_rgb.shape[0] - crop_size[0], 0)
+        margin_w = max(img_rgb.shape[1] - crop_size[1], 0)
+        offset_h = np.random.randint(0, margin_h + 1)
+        offset_w = np.random.randint(0, margin_w + 1)
+        crop_y1, crop_y2 = offset_h, offset_h + crop_size[0]
+        crop_x1, crop_x2 = offset_w, offset_w + crop_size[1]
+
+        actual_channels = self.channels
+        if self.channels == "random": actual_channels = np.random.choice(["color","depth"])
+
+        # crop the image
+        if actual_channels == "color":
+            img_rgb = img_rgb[crop_y1:crop_y2, crop_x1:crop_x2, ...]
+            img_rgb = cv2.resize(img_rgb, np.flip(img_shape[0:2]))
+        elif actual_channels == "depth":
+            img_d = img_d[crop_y1:crop_y2, crop_x1:crop_x2, ...]
+            img_d = cv2.resize(img_d, np.flip(img_shape[0:2]))
+            img_d = img_d[..., np.newaxis]
+        else:
+            raise KeyError("Wrong channels param")
+        
+        results['img'] = np.concatenate([img_rgb, img_d], axis=2)
+
+        # masks are not changed at all
+
+        # # for testing proposes         
+        # anns_color = (0,255,255)
+        # img_d = cv2.cvtColor(img_d, cv2.COLOR_GRAY2RGB)
+        # for mask in results['gt_masks']:
+        #     color_mask = np.stack((anns_color[0] * mask, anns_color[1] * mask, anns_color[2] * mask), axis=-1).astype(np.uint8)
+        #     img_rgb = cv2.addWeighted(img_rgb, 1.0, color_mask, 0.7, 0)
+        #     img_d = cv2.addWeighted(img_d, 1.0, color_mask, 0.7, 0)
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(1,2)
+        # axes[0].imshow(img_rgb)
+        # axes[1].imshow(img_d)
+        # fig.show()
+
+        return results
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(crop_percentage={})'.format(
+            self.crop_percentage)
+
+@PIPELINES.register_module
 class SegRescale(object):
     """Rescale semantic segmentation maps.
 
@@ -434,8 +501,10 @@ class SegRescale(object):
     def __call__(self, results):
         for key in results.get('seg_fields', []):
             if self.scale_factor != 1:
+
                 results[key] = mmcv.imrescale(
                     results[key], self.scale_factor, interpolation='nearest')
+                
         return results
 
     def __repr__(self):
