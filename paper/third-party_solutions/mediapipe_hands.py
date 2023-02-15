@@ -10,6 +10,7 @@ class MediaPipePredictor:
       self.model = mp_hands.Hands(
           static_image_mode=True,
           max_num_hands=4,
+          min_tracking_confidence=min_confidence_score,
           min_detection_confidence=min_confidence_score)
 
     def eval(self):
@@ -50,11 +51,11 @@ class MediaPipePredictor:
 
 
     def calc_bbox(self, image_height, image_width, hand_landmarks):
-        x_max = max(i.x for i in hand_landmarks.landmark) 
-        x_min = min(i.x for i in hand_landmarks.landmark)
-        y_max = max(i.y for i in hand_landmarks.landmark)
-        y_min = min(i.y for i in hand_landmarks.landmark)
+        x_max = np.clip(max(i.x * image_width for i in hand_landmarks.landmark), 0, image_width)
+        x_min = np.clip(min(i.x * image_width for i in hand_landmarks.landmark), 0, image_width)
+        y_max = np.clip(max(i.y * image_height for i in hand_landmarks.landmark), 0, image_height)
+        y_min = np.clip(min(i.y * image_height for i in hand_landmarks.landmark), 0, image_height)
         
-        return np.array([x_min * image_width, y_min * image_height, x_max * image_width, y_max * image_height]).astype(int)
+        return np.array([x_min, y_min, x_max, y_max]).astype(int)
      
         
