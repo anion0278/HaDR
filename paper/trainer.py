@@ -89,7 +89,7 @@ def evaluate(work_dir):
     print("Running evaluation (output is disabled!), please wait...")
     from subprocess import run
     import re
-    command = f"python paper/tester.py --checkpoint_path {work_dir} --eval segm"
+    command = f"python paper/tester.py --checkpoint_path {work_dir}"
     output = run(command, capture_output=True).stdout
     print(command)
     return re.sub("index created[\s\S]*Writing results to", "", output.decode('ascii'), count=0, flags=0)

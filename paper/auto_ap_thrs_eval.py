@@ -35,7 +35,7 @@ def eval_ap():
         if (re.search("^\d[A-Za-z0-9]+-",model_dir)):
             dirname = os.path.join(path_to_models, model_dir)
             if (os.path.exists(os.path.join(dirname,"final.pth"))):
-                command = f"python paper/tester.py --checkpoint_path {dirname} --eval segm"
+                command = f"python paper/tester.py --checkpoint_path {dirname}"
                 print(command)
                 os.system(command)
 
