@@ -204,11 +204,8 @@ def main():
         eval_types = args.eval
         if eval_types:
             print("Starting evaluate {}".format(" and ".join(eval_types)))
-            if eval_types == ["proposal_fast"]:
-                result_file = args.out
-                coco_eval(result_file, eval_types, dataset.coco)
-            else:
-                if not isinstance(outputs[0], dict): # Segmentation
+            if eval_types != ["proposal_fast"]:
+                if not isinstance(outputs[0], dict): 
                     result_files = results2json(dataset, outputs, args.out)
                     total_out_file = open(s.path_to_models + "evals.txt","a+")
                     total_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
@@ -219,14 +216,6 @@ def main():
                         score_thrs_out_file.close()
                     eval_predicitons(dataset, eval_types, result_files, total_out_file, default_min_score)
                     total_out_file.close()
-                else:
-                    for name in outputs[0]:
-                        print("\nEvaluating {}".format(name))
-                        outputs_ = [out[name] for out in outputs]
-                        result_file = args.out + ".{}".format(name)
-                        result_files = results2json(dataset, outputs_,
-                                                    result_file)
-                        coco_eval(result_files, eval_types, dataset.coco)
 
 def eval_predictions_in_score_range(dataset, eval_types, result_files, eval_out_file):
     step = 0.025
