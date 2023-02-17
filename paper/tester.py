@@ -228,16 +228,6 @@ def main():
                                                     result_file)
                         coco_eval(result_files, eval_types, dataset.coco)
 
-    # Save predictions in the COCO json format
-    if args.json_out and rank == 0:
-        if not isinstance(outputs[0], dict):
-            results2json(dataset, outputs, args.json_out)
-        else:
-            for name in outputs[0]:
-                outputs_ = [out[name] for out in outputs]
-                result_file = args.json_out + ".{}".format(name)
-                results2json(dataset, outputs_, result_file)
-
 def eval_predictions_in_score_range(dataset, eval_types, result_files, eval_out_file):
     step = 0.025
     for min_score in np.arange(0.0, 1.0 + step, step):
