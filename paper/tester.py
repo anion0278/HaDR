@@ -32,10 +32,10 @@ import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
 TEST = False
-eval_score_threshold = False
+eval_score_threshold = True
 eval_mediapipe = False
 
-default_min_score = 0.1
+default_min_score = 0.0
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -65,7 +65,7 @@ def get_boxes_with_masks(result, num_classes):
         cate_score = cur_result[2].cpu().numpy().astype(np.float)
         num_ins = seg_pred.shape[0]
         for idx in range(num_ins):
-            class_label_id = cate_label[idx]
+            class_label_id = cate_label[idx] 
             if class_label_id >= num_classes: continue
             cur_mask = seg_pred[idx, ...]
             rle = mask_util.encode(np.array(cur_mask[:, :, np.newaxis], order="F"))[0]
@@ -139,7 +139,7 @@ def main():
         import mediapipe_hands
         model = mediapipe_hands.MediaPipePredictor(default_min_score)
         cfg = utils.get_config("solov2_light_448_r50_fpn", 3) # name of arch is not important here
-        checkpoint_path_full = s.path_to_datasets
+        checkpoint_path_full = s.path_to_models + "/mediapipe/out"
         args.eval = ["bbox"]
         eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
     else:
@@ -152,7 +152,7 @@ def main():
         arch, channels = utils.parse_config_and_channels_from_checkpoint_path(os.path.dirname(checkpoint_path_full))
         cfg = utils.get_config(arch, channels)
 
-         # build the model and load checkpoint
+        # build the model and load checkpoint
         model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
 
         while not osp.isfile(checkpoint_path_full):
@@ -164,7 +164,7 @@ def main():
 
         model = MMDataParallel(model, device_ids=[0])
 
-    args.out = os.path.dirname(os.path.abspath(checkpoint_path_full)) + "/out.pkl"
+    args.out = os.path.dirname(checkpoint_path_full) + "/out.pkl"
 
     if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True

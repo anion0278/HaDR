@@ -7,6 +7,46 @@ from mmdet.apis import set_random_seed
 import tkinter as tk
 from tkinter import filedialog
 import tkinter.messagebox # this is required! see https://stackoverflow.com/a/29780454/10571624
+import matplotlib.pyplot as plt
+import numpy as np
+
+arch_translation = {
+    "mask_rcnn_r50_fpn" : "Mask R-CNN ResNet50",
+    "mask_rcnn_r101_fpn" : "Mask R-CNN ResNet101",
+    "solov2_light_448_r50_fpn" : "SOLOv2 ResNet50",
+    "solov2_r101_fpn" : "SOLOv2 ResNet101"
+}
+
+channels_translation = {
+    1 : "Depth",
+    3 : "RGB",
+    4 : "RGB-D",
+}
+
+def draw_score_thrs_graph(data, xlabel, y_label, y_lim, y_ticks):
+    fig, ax = plt.subplots()
+    markers = ["o","v","s","x"]
+    lines = ["-",":","--"]
+    colors = ["blue","green","gold","darkorange"]
+    for i,[name,line] in enumerate(data):
+        x,y = np.array(line).T
+        ax.plot(x,y,marker = markers[i//3],markersize = 3,label = name,linestyle=lines[i%3],color=colors[i//3])
+    ax.set_ylim(0,y_lim)   
+    ax.set_xlim(0,1)   
+    ax.grid(visible=True)
+    ax.set_xticks(np.arange(0,1.05,0.2))
+    ax.set_yticks(y_ticks)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(y_label)
+    plt.subplots_adjust(right=0.7)
+    plt.legend(bbox_to_anchor=(1.04,1),loc="upper left")
+    plt.show(block=True)
+
+def get_arch_translation(arch):
+    return arch_translation[arch]
+
+def get_channels_translation(channels_num):
+    return channels_translation[channels_num]
 
 def ask_user_for_dataset():
     options = {
