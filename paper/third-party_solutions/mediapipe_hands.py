@@ -25,29 +25,34 @@ class MediaPipePredictor:
         img_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
         results = self.model.process(img_rgb)
 
+        masks = []
         bboxes = []
         image_height, image_width, _ = img_rgb.shape
-        annotated_image = img_rgb.copy()
         if results.multi_hand_landmarks is not None:
             for hand_landmarks, handedness in zip(results.multi_hand_landmarks,results.multi_handedness):
                 #print('hand_landmarks:', hand_landmarks)
-                mp_drawing.draw_landmarks(
+                self.draw_landmarks(img_rgb, hand_landmarks)
+                bbox = self.calc_bbox(image_height, image_width, hand_landmarks) 
+                bbox_with_score = np.append(bbox, handedness.classification[0].score)
+                bboxes.append(bbox_with_score)
+                masks.append({"counts":"", "size":0})
+
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure(1)
+        # ax1 = fig.add_subplot(221)
+        # ax1.imshow(img_rgb)
+        # plt.show()
+
+        # this is required to run the same evaluation
+        return (np.array([bboxes]), np.array([masks]),) #, img_rgb
+
+    def draw_landmarks(self, annotated_image, hand_landmarks):
+        mp_drawing.draw_landmarks(
                     annotated_image,
                     hand_landmarks,
                     mp_hands.HAND_CONNECTIONS,
                     mp_drawing_styles.get_default_hand_landmarks_style(),
                     mp_drawing_styles.get_default_hand_connections_style())
-                bbox = self.calc_bbox(image_height, image_width, hand_landmarks) 
-                bbox_with_score = np.append(bbox, handedness.classification[0].score)
-                annotated_image = cv2.rectangle(annotated_image, bbox[0:2], bbox[2:4], (255,255,255), 3)
-                bboxes.append(bbox_with_score)
-
-        # import matplotlib.pyplot as plt
-        # fig = plt.figure(1)
-        # ax1 = fig.add_subplot(221)
-        # ax1.imshow(annotated_image)
-        # plt.show()
-        return [bboxes, []]
 
 
     def calc_bbox(self, image_height, image_width, hand_landmarks):
