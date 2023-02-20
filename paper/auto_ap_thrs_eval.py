@@ -10,7 +10,7 @@ import model_utils as utils
 import matplotlib.pyplot as plt
 
 plt.rcParams.update({'font.size': 12})
-path_to_models = "E:\models\FINAL_TRAIN_ours" # s.path_to_models
+path_to_models = "D:/models/mediapipe_eval" # s.path_to_models
 
 ap_range = "0.50:0.95" # . does not have to be replaced with escaped version
 regex_pattern = f"Min score: (\d.\d+)\n[\S\s]+?IoU=({ap_range}).+ = (\d.\d+)\n"
@@ -18,9 +18,13 @@ regex_pattern = f"Min score: (\d.\d+)\n[\S\s]+?IoU=({ap_range}).+ = (\d.\d+)\n"
 def read_ap_data(path_to_ap_scores_file, config):
     f = open(path_to_ap_scores_file, "r")
     file_content = f.read()
-    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(config)
-    arch_name = utils.get_arch_translation(arch)
-    channels_name = utils.get_channels_translation(channels)
+    try:
+        arch, channels = utils.parse_config_and_channels_from_checkpoint_path(config)
+        arch_name = utils.get_arch_translation(arch)
+        channels_name = utils.get_channels_translation(channels)
+    except:
+        arch_name = "MediaPipe"
+        channels_name = "RGB"
     model_data = []
     for match in re.finditer(regex_pattern, file_content):
         min_score = float(match.group(1))
@@ -38,6 +42,7 @@ def eval_ap():
                 command = f"python paper/tester.py --checkpoint_path {dirname}"
                 print(command)
                 os.system(command)
+
 
 if __name__ == "__main__":
 

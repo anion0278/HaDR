@@ -30,11 +30,11 @@ import mediapipe_adapter
 import warnings
 warnings.filterwarnings("ignore")  # disables annoying deprecation warnings
 
-TEST = True
-eval_score_threshold = True
-eval_mediapipe = True
+TEST = False
+eval_score_threshold = False
+eval_mediapipe = False
 
-default_min_score = 0.0
+default_min_score = 0.050
 
 eval_dataset_annotations = "/instances_hands_full.json"
 if TEST:
@@ -98,19 +98,26 @@ def single_gpu_test(model, data_loader, show=False, verbose=True):
 def parse_args():
     parser = argparse.ArgumentParser(description="Custom test detector")
     parser.add_argument("--checkpoint_path", help="checkpoint path", default=(None, s.path_to_models+wss.tested_model))
+    parser.add_argument("--score_thrs", help="confidence threshold", type=float, default=default_min_score)
+    parser.add_argument("--mediapipe", help="eval mediapipe", action='store_true')
     return parser.parse_args()
 
 def main():
     print(sys.argv)
     args = parse_args()
+    min_score_thrs = args.score_thrs
+    eval_mediapipe = args.mediapipe
     eval_types = ["bbox", "segm"]
 
     if eval_mediapipe:
-        model = mediapipe_adapter.MediaPipePredictor(default_min_score)
+        model = mediapipe_adapter.MediaPipePredictor(min_score_thrs)
         cfg = utils.get_config("solov2_light_448_r50_fpn", 3) # name of arch is not important here
-        checkpoint_path_full = s.path_to_models + "/mediapipe/out"
+        checkpoint_path_full = s.mediapipe_path + "out"
         eval_types = ["bbox"]
-        eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
+        if len(args.checkpoint_path) == 2: 
+            eval_dataset = s.path_to_datasets + wss.tested_dataset
+        else:
+            eval_dataset = s.path_to_datasets + utils.ask_user_for_dataset() 
     else:
         if len(args.checkpoint_path) == 2:
             checkpoint_path_full = utils.ask_user_for_checkpoint(args.checkpoint_path[1])
@@ -162,7 +169,7 @@ def main():
     outputs = single_gpu_test(model, data_loader)
     result_files = store_results(predictions_file, dataset, outputs)
 
-    print("Starting evaluation...")
+    print(f"Starting evaluation, score threshold {min_score_thrs}")
     total_out_file = open(s.path_to_models + "evals.txt","a+")
     total_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
     if eval_score_threshold:
@@ -170,7 +177,7 @@ def main():
         score_thrs_out_file.write(checkpoint_path_full + f" Dataset: {eval_dataset}\n")
         eval_predictions_in_score_range(dataset, eval_types, result_files, score_thrs_out_file, data_loader, predictions_file)
         score_thrs_out_file.close()
-    eval_predicitons(dataset, eval_types, result_files, total_out_file, default_min_score)
+    eval_predicitons(dataset, eval_types, result_files, total_out_file, min_score_thrs)
     total_out_file.close()
 
 def store_results(predictions_file, dataset, outputs):

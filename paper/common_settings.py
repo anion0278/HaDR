@@ -4,6 +4,7 @@ import ws_specific_settings as wss
 
 path_to_datasets= wss.storage + ":/datasets/"
 path_to_models= wss.storage + ":/models/"
+mediapipe_path= path_to_models + "/mediapipe_eval/mediapipe/"
 path_to_configs_formatted = "./paper/tested_configs/%s.py"
 tested_checkpoint_file_name = "final.pth"
 score_thrs_file_name = "ap_score_threshold_evals.txt"

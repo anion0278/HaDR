@@ -5,13 +5,15 @@ import model_utils as utils
 sys.path.insert(0,os.path.abspath("./paper/pdq"))
 import read_files
 
-path_to_models = "E:/models/FINAL_third_party/Obman"
-dataset_anns_path = "E:/datasets/real_merged_l515_640x480/instances_hands_full.json"
+path_to_models = s.path_to_models + "/mediapipe_eval/"
+dataset_anns_path = s.path_to_datasets + "real_merged_l515_640x480/instances_hands_full.json"
 output_file_name = "pdq_score_threshold_evals.txt"
 coco_dets_file_name = "out.pkl.bbox.json"
 rvc_dets_file_name = "rvc1_det.json"
 
 reevaluate_map = False
+eval_mediapipe = True
+if eval_mediapipe: reevaluate_map = False
 
 regex_pattern = f"threshold: (\d.\d+) - PDQ: (\d.\d+) - avg_pPDQ: (\d.\d+) - spatial_PDQ: (\d.\d+) - label_PDQ: (\d.\d+) - mAP: (\d.\d+) - TP: (\d+) - FP: (\d+) - FN: (\d+)"
 
@@ -30,9 +32,13 @@ def plot_data():
 def read_pdq_data(path_to_pdq_file, config):
     f = open(path_to_pdq_file, "r")
     file_content = f.read()
-    arch, channels = utils.parse_config_and_channels_from_checkpoint_path(config)
-    arch_name = utils.get_arch_translation(arch)
-    channels_name = utils.get_channels_translation(channels)
+    try:
+        arch, channels = utils.parse_config_and_channels_from_checkpoint_path(config)
+        arch_name = utils.get_arch_translation(arch)
+        channels_name = utils.get_channels_translation(channels)
+    except:
+        arch_name = "MediaPipe"
+        channels_name = "RGB"
     model_data = []
     for match in re.finditer(regex_pattern, file_content):
         min_score = float(match.group(1))
@@ -51,7 +57,7 @@ def read_pdq_data(path_to_pdq_file, config):
 def eval_pdq(model_dir):
     if reevaluate_map:
         # generate predictions and evaluate mAP 
-        os.system(f"python paper/tester.py --checkpoint_path {model_dir} --eval segm")
+        os.system(f"python paper/tester.py --checkpoint_path {model_dir}")
 
     out_file_path = os.path.join(model_dir, output_file_name)
 
@@ -80,6 +86,9 @@ def prepare_pdq_dir(model_dir):
 
 def eval_pdq_for_score_threshold(model_dir, min_score_thrs, out_file_path):
     pdq_eval_dir = prepare_pdq_dir(model_dir)
+
+    if eval_mediapipe:
+        os.system(f"python paper/tester.py --mediapipe --score_thrs {min_score_thrs}")
 
     read_files.convert_coco_det_to_rvc_det(
         f"{model_dir}/{coco_dets_file_name}", 
