@@ -44,7 +44,7 @@ class MediaPipePredictor:
         # plt.show()
 
         # this is required to run the same evaluation
-        return (np.array([bboxes]), np.array([masks]),) #, img_rgb
+        return (np.array([bboxes]), np.array([masks]),), cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 
     def draw_landmarks(self, annotated_image, hand_landmarks):
         mp_drawing.draw_landmarks(
