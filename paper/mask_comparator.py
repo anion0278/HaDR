@@ -12,13 +12,15 @@ s.add_packages_paths()
 
 from mmdet.apis import init_detector, show_result_ins, predict_image, show_result_pyplot
 
-threshold = 0.01
-tested_models=["2X-solov2_r101_fpn_1ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Tue_20_Dec_17h_37m",
-"2Y-solov2_r101_fpn_3ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Fri_23_Dec_01h_21m",
-"2Z-solov2_r101_fpn_4ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Sun_25_Dec_22h_59m",
-"3X-mask_rcnn_r50_fpn_1ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Wed_04_Jan_08h_43m",
-"3Y-mask_rcnn_r50_fpn_3ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Fri_23_Dec_20h_55m",
-"3Z-mask_rcnn_r50_fpn_4ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Mon_26_Dec_18h_41m"]
+#threshold = 0.01
+tested_models={
+"2X-solov2_r101_fpn_1ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Tue_20_Dec_17h_37m":0.55,
+"1Y-solov2_light_448_r50_fpn_3ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Thu_22_Dec_13h_45m":0.6,
+"2Z-solov2_r101_fpn_4ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Sun_25_Dec_22h_59m":0.5,
+"4X-mask_rcnn_r101_fpn_1ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Thu_05_Jan_01h_16m":0.825,
+"3Y-mask_rcnn_r50_fpn_3ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Fri_23_Dec_20h_55m":0.975,
+"3Z-mask_rcnn_r50_fpn_4ch-CocoPretrained=True-DS=sim_train_320x256_full-Aug=False-BS=4-BNfixed=False-FrozenEP=0+LR=0.01-UnfrozenEP=20_+LR=0.01-LRConfig=step[7-18]-Mon_26_Dec_18h_41m":0.9
+}
 
 dataset_dir = os.path.join(s.path_to_datasets,"qualitative_test")
 gt_dir = os.path.join(dataset_dir,"mask")
@@ -63,10 +65,11 @@ def compare_single_image(img_prediction,filename):
     return img_prediction,[str(TP),str(FP),str(FN)]
 
 if __name__ == "__main__":
-    test_dest = os.path.join(dataset_dir,"Threshold" + str(threshold))
+    test_dest = os.path.join(dataset_dir,"test")
     os.mkdir(test_dest)
-    for model_dir in tested_models:
-        
+
+    for model_dir,threshold in tested_models.items():
+               
         checkpoint_path_full = os.path.join(s.path_to_models,"FINAL TRAIN - ours",model_dir,s.tested_checkpoint_file_name)
         arch, channels = utils.parse_config_and_channels_from_checkpoint_path(model_dir)
         cfg = utils.get_config(arch, channels)
@@ -75,7 +78,8 @@ if __name__ == "__main__":
             print(f"Overrinding the model classes! Current classes: {len(model.CLASSES)}")
             model.CLASSES = ["person"] if cfg.model.bbox_head.num_classes == 81 else ["hand"]
     
-    
+        
+
         log_filename = os.path.join(test_dest,str(channels)+"ch-"+arch+"-"+"log.txt")
         f = open(log_filename,"w")    
         stats = []
