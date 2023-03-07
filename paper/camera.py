@@ -52,7 +52,7 @@ class RgbdCamera():
         if(self.device_type == "L500"):
             rawdepth = np.asanyarray(filtered.get_data())
             min = 0.2
-            max = 1.05
+            max = 1.0
             mapped_depth = np.clip(rawdepth*self.depth_scale,min,max)
             norm = lambda n: n/max
             mapped_depth = 255-norm(mapped_depth)*255
