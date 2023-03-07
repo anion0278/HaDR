@@ -1,7 +1,8 @@
 from pycocotools.cocoeval import Params
 
-def show_hist(data, bins, enable_bar_labels = True):
+def show_hist(data, bins, y_lim = None, enable_bar_labels = True):
         import matplotlib.pyplot as plt
+        plt.figure(figsize=(4, 2.5))
         counts, edges, bars = plt.hist(data, edgecolor="black", bins=bins)
         if enable_bar_labels: plt.bar_label(bars)
         cm = plt.cm.get_cmap('Blues')
@@ -30,7 +31,11 @@ def show_hist(data, bins, enable_bar_labels = True):
 
         plt.xlabel('Instance area')
         plt.ylabel('Number of instances')
-        plt.show()
+        if y_lim is not None: 
+            ax = plt.gca()
+            ax.set_ylim([0, y_lim])
+        plt.subplots_adjust(left = 0.17, bottom=0.2, right=0.95)
+        plt.show(block=True)
 
 class CustomizedEvalParams(Params):
     def __init__(self, coco_dataset):
@@ -57,9 +62,9 @@ class CustomizedEvalParams(Params):
         print(f"Calculated object sizes from distribution \n Small limit: {small} \n Medium limit: {medium} \n Largest object area: {large}")
 
         # COCO: self.areaRng = [[0 ** 2, 1e5 ** 2], [0 ** 2, 32 ** 2], [32 ** 2, 96 ** 2], [96 ** 2, 1e5 ** 2]]
-        # show_hist(annotation_areas,[0, 32 ** 2, 96 ** 2, large])
-        # show_hist(annotation_areas,[0, small, medium, large])
-        # show_hist(annotation_areas,50, False)
+        show_hist(annotation_areas,[0, 32 ** 2, 96 ** 2, large], y_lim=690.0)
+        show_hist(annotation_areas,[0, small, medium, large], y_lim = 470.0)
+        show_hist(annotation_areas,50, enable_bar_labels = False)
 
         return small, medium, large
 
