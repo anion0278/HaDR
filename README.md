@@ -43,5 +43,10 @@ pip install "git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonA
 pip install -v -e .  # or "python setup.py develop"
 ```
 
+## Dataset and pretrained models
+The dataset and pretrained SOLOv2 and Mask R-CNN models can be found on [Kaggle](https://www.kaggle.com/datasets/alevysock/hadr-dataset-for-hands-instance-segmentation).
+
+## Demo
+![demo](https://github.com/anion0278/HaDR/assets/23017063/6a5750f8-84c7-48af-a382-a2bc446ad975)
 
 
